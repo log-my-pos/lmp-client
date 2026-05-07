@@ -43,6 +43,8 @@ kotlin {
 			
 			implementation(libs.tablericons.outline)
 			implementation(libs.tablericons.filled)
+			
+			implementation(libs.voyager.navigator)
 		}
 		
 		commonTest.dependencies {

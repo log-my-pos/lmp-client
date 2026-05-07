@@ -4,8 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import cafe.adriel.voyager.navigator.Navigator
+import dev.pandasystems.logmypos_client.menus.HomeScreen
 
 class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -13,15 +13,7 @@ class MainActivity : ComponentActivity() {
 		super.onCreate(savedInstanceState)
 		
 		setContent {
-			App()
+			Navigator(HomeScreen())
 		}
 	}
-	
-	
-}
-
-@Preview
-@Composable
-fun AppAndroidPreview() {
-	App()
 }
