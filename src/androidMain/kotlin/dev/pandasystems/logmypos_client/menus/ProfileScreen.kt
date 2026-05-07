@@ -5,9 +5,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import kotlinx.serialization.Serializable
 import java.util.*
 
-data class ProfileScreen(val id: UUID) : Screen {
+data class ProfileScreen(val id: UUID? = null) : Screen {
 	@Composable
 	override fun Content() {
-		TODO("Not yet implemented")
 	}
 }

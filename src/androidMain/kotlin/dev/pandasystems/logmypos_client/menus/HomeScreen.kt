@@ -23,6 +23,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.MapSearch
@@ -30,6 +32,7 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
+import java.util.UUID
 
 class HomeScreen : Screen {
 	@Composable
@@ -69,6 +72,7 @@ class HomeScreen : Screen {
 					var searchWidgetOpen by remember { mutableStateOf(false) }
 					val fieldShape = RoundedCornerShape(100)
 					val focusManager = LocalFocusManager.current
+					val navigator = LocalNavigator.currentOrThrow
 
 					BasicTextField(
 						value = searchBarState,
@@ -125,6 +129,7 @@ class HomeScreen : Screen {
 									Icon(Tabler.Outline.MapSearch, contentDescription = null)
 								}
 								Spacer(modifier = Modifier.width(12.dp))
+								
 								Box(
 									modifier = Modifier.weight(1f),
 									contentAlignment = Alignment.CenterStart
@@ -133,6 +138,17 @@ class HomeScreen : Screen {
 										Text("Search here", color = MaterialTheme.colorScheme.onSurfaceVariant)
 									}
 									innerTextField()
+								}
+								
+								Spacer(modifier = Modifier.width(12.dp))
+								IconButton(
+									onClick = {
+										navigator.push(ProfileScreen())
+									},
+									modifier = Modifier
+										.width(24.dp)
+								) {
+									Icon(Tabler.Outline.ArrowLeft, contentDescription = null)
 								}
 							}
 						}
