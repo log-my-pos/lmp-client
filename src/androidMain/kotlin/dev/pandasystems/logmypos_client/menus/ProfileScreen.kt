@@ -1,12 +1,17 @@
 package dev.pandasystems.logmypos_client.menus
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import cafe.adriel.voyager.core.screen.Screen
-import kotlinx.serialization.Serializable
-import java.util.*
+import androidx.compose.ui.tooling.preview.Preview
+import dev.pandasystems.logmypos_client.navigation.Screen
 
-data class ProfileScreen(val id: UUID? = null) : Screen {
+class ProfileScreen : Screen() {
+	@Preview
 	@Composable
-	override fun Content() {
+	override fun onContent() {
+		MaterialTheme {
+			Text("Hello World")
+		}
 	}
 }

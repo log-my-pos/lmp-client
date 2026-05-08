@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,11 +21,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.MapSearch
@@ -32,11 +31,12 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
-import java.util.UUID
+import dev.pandasystems.logmypos_client.navigation.Screen
 
-class HomeScreen : Screen {
+class HomeScreen : Screen() {
+	@Preview
 	@Composable
-	override fun Content() {
+	override fun onContent() {
 		MaterialTheme {
 			Box(modifier = Modifier.fillMaxSize()) {
 				MapboxMap(
@@ -72,7 +72,6 @@ class HomeScreen : Screen {
 					var searchWidgetOpen by remember { mutableStateOf(false) }
 					val fieldShape = RoundedCornerShape(100)
 					val focusManager = LocalFocusManager.current
-					val navigator = LocalNavigator.currentOrThrow
 
 					BasicTextField(
 						value = searchBarState,
@@ -129,7 +128,7 @@ class HomeScreen : Screen {
 									Icon(Tabler.Outline.MapSearch, contentDescription = null)
 								}
 								Spacer(modifier = Modifier.width(12.dp))
-								
+
 								Box(
 									modifier = Modifier.weight(1f),
 									contentAlignment = Alignment.CenterStart
@@ -139,11 +138,11 @@ class HomeScreen : Screen {
 									}
 									innerTextField()
 								}
-								
+
 								Spacer(modifier = Modifier.width(12.dp))
 								IconButton(
-									onClick = {
-										navigator.push(ProfileScreen())
+									onClick = { 
+										currentNavController.navigate(ProfileScreen())
 									},
 									modifier = Modifier
 										.width(24.dp)
