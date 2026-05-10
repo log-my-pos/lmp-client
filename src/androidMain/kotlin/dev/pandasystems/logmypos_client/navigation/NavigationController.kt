@@ -23,4 +23,10 @@ class NavigationController(
 		}
 		_screen.value = newScreen
 	}
+	
+	fun navigateBack() {
+		if (NavigationManager.backlogStack.isNotEmpty()) {
+			NavigationManager.backlogStack.pop().invoke()
+		}
+	}
 }
