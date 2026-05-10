@@ -5,8 +5,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 
 @Composable
-fun Navigator(screen: Screen) {
-	val controller = remember { NavigationController(screen) }
+fun Navigator(
+	navHost: NavHostBuilder.() -> Unit
+) {
+	val controller = remember { NavigationController() }
 	
 	DisposableEffect(Unit) {
 		NavigationManager.controllerStack.push(controller)
@@ -14,6 +16,14 @@ fun Navigator(screen: Screen) {
 			NavigationManager.controllerStack.pop()
 		}
 	}
+	
+	NavHostBuilder().navHost()
 
 	controller.screen.onContent()
 }
+
+class NavHostBuilder {
+	
+}
+
+val localNavController get() = NavigationManager.controllerStack.last()

@@ -2,9 +2,7 @@ package dev.pandasystems.logmypos_client.navigation
 
 import androidx.compose.runtime.mutableStateOf
 
-class NavigationController(
-	initialScreen: Screen
-) {
+class NavigationController() {
 	private val _screen = mutableStateOf(initialScreen)
 	val screen: Screen
 		get() = _screen.value
