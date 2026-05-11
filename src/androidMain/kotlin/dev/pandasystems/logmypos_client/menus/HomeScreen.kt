@@ -31,8 +31,8 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
-import dev.pandasystems.logmypos_client.navigation.localNavController
-import java.util.UUID
+import dev.pandasystems.logmypos_client.navigation.LocalNavController
+import java.util.*
 
 object Home
 
@@ -74,6 +74,7 @@ fun HomeScreen() {
 				var searchWidgetOpen by remember { mutableStateOf(false) }
 				val fieldShape = RoundedCornerShape(100)
 				val focusManager = LocalFocusManager.current
+				val navController = LocalNavController.current
 				
 				BackHandler(searchWidgetOpen) {
 					searchWidgetOpen = false
@@ -148,7 +149,7 @@ fun HomeScreen() {
 							Spacer(modifier = Modifier.width(12.dp))
 							IconButton(
 								onClick = {
-									localNavController.navigate(Profile(UUID.randomUUID()))
+									navController.navigate(Profile(UUID.randomUUID()))
 								},
 								modifier = Modifier
 									.width(24.dp)

@@ -3,21 +3,20 @@ package dev.pandasystems.logmypos_client.menus
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.*
-import dev.pandasystems.logmypos_client.navigation.localNavController
-import java.util.UUID
+import dev.pandasystems.logmypos_client.components.Avatar
+import dev.pandasystems.logmypos_client.navigation.LocalNavController
+import java.util.*
 
 data class Profile(
 	val profileId: UUID
@@ -26,6 +25,7 @@ data class Profile(
 @Preview
 @Composable
 fun ProfileScreen() {
+	val navController = LocalNavController.current
 	MaterialTheme {
 		Box(
 			modifier = Modifier
@@ -46,7 +46,7 @@ fun ProfileScreen() {
 						contentAlignment = Alignment.CenterStart
 					) {
 						IconButton(
-							onClick = { localNavController.navigateBack() },
+							onClick = { navController.navigateBack() },
 							modifier = Modifier.align(Alignment.CenterStart)
 						) {
 							Icon(Tabler.Outline.ArrowLeft, contentDescription = "Back")
@@ -78,20 +78,7 @@ fun ProfileScreen() {
 							verticalAlignment = Alignment.CenterVertically,
 						) {
 							// Avatar
-							Box(
-								modifier = Modifier
-									.size(80.dp)
-									.clip(CircleShape)
-									.background(MaterialTheme.colorScheme.primary),
-								contentAlignment = Alignment.Center
-							) {
-								Icon(
-									Tabler.Outline.User,
-									contentDescription = "Profile Avatar",
-									modifier = Modifier.size(48.dp),
-									tint = MaterialTheme.colorScheme.onPrimary
-								)
-							}
+							Avatar()
 							
 							Column(
 								modifier = Modifier.fillMaxSize(),

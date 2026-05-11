@@ -1,13 +1,7 @@
 package dev.pandasystems.logmypos_client.navigation
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 
 @Composable
 fun NavHost(
@@ -15,20 +9,14 @@ fun NavHost(
 	compose: @Composable NavHost.() -> Unit
 ) {
 	val navHost = remember { NavHost(defaultKey) }
-	
-	DisposableEffect(Unit) {
-		controllerStack.push(NavigationController(navHost))
-		
-		onDispose {
-			controllerStack.pop()
+	val navController = remember(navHost) { NavigationController(navHost) }
+	CompositionLocalProvider(LocalNavController provides navController) {
+		BackHandler(enabled = navHost.backlogStack.isNotEmpty()) {
+			navHost.currentKey = navHost.backlogStack.removeLast()
 		}
-	}
 
-	BackHandler(enabled = navHost.backlogStack.isNotEmpty()) { 
-		navHost.currentKey = navHost.backlogStack.removeLast()
+		navHost.compose()
 	}
-	
-	navHost.compose()
 }
 
 class NavHost(

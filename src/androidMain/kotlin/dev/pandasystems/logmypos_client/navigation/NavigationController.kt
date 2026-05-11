@@ -1,6 +1,6 @@
 package dev.pandasystems.logmypos_client.navigation
 
-import java.util.ArrayDeque
+import androidx.compose.runtime.staticCompositionLocalOf
 
 class NavigationController(val navHost: NavHost) {
 	fun navigate(
@@ -25,6 +25,5 @@ class NavigationController(val navHost: NavHost) {
 	}
 }
 
-internal val controllerStack = ArrayDeque<NavigationController>()
-
-val localNavController get() = controllerStack.last()
+val LocalNavController =
+	staticCompositionLocalOf<NavigationController> { error("CompositionLocal LocalNavController not present") }
