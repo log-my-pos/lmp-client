@@ -31,6 +31,9 @@ import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
 import dev.pandasystems.logmypos_client.navigation.localNavController
+import java.util.UUID
+
+object Home
 
 @Preview
 @Composable
@@ -140,7 +143,7 @@ fun HomeScreen() {
 							Spacer(modifier = Modifier.width(12.dp))
 							IconButton(
 								onClick = {
-									localNavController.navigate(ProfileScreen())
+									localNavController.navigate(Profile(UUID.randomUUID()))
 								},
 								modifier = Modifier
 									.width(24.dp)

@@ -1,14 +1,8 @@
 package dev.pandasystems.logmypos_client.navigation
 
-import androidx.compose.runtime.mutableStateOf
-
-class NavigationController() {
-	private val _screen = mutableStateOf(initialScreen)
-	val screen: Screen
-		get() = _screen.value
-
+class NavigationController(val navHost: NavHost) {
 	fun navigate(
-		newScreen: Screen,
+		newKey: Any,
 		shouldAddToBacklog: Boolean = true,
 		shouldClearBacklog: Boolean = false
 	) {
@@ -16,10 +10,10 @@ class NavigationController() {
 			NavigationManager.backlogStack.clear()
 		}
 		if (shouldAddToBacklog) {
-			val oldScreen = screen
-			NavigationManager.backlogStack.push { _screen.value = oldScreen }
+			val oldKey = navHost.currentKey
+			navHost.backlogStack.push(oldKey)
 		}
-		_screen.value = newScreen
+		navHost.currentKey = newKey
 	}
 	
 	fun navigateBack() {

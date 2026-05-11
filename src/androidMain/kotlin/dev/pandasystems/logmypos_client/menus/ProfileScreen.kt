@@ -17,6 +17,11 @@ import androidx.compose.ui.unit.sp
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.*
 import dev.pandasystems.logmypos_client.navigation.localNavController
+import java.util.UUID
+
+data class Profile(
+	val profileId: UUID
+)
 
 @Preview
 @Composable

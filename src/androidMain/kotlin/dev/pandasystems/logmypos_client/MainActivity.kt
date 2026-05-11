@@ -5,9 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import dev.pandasystems.logmypos_client.menus.Home
 import dev.pandasystems.logmypos_client.menus.HomeScreen
+import dev.pandasystems.logmypos_client.menus.Profile
+import dev.pandasystems.logmypos_client.menus.ProfileScreen
+import dev.pandasystems.logmypos_client.navigation.NavHost
 import dev.pandasystems.logmypos_client.navigation.NavigationManager
-import dev.pandasystems.logmypos_client.navigation.Navigator
 
 class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,7 +28,10 @@ class MainActivity : ComponentActivity() {
 		})
 		
 		setContent {
-			Navigator(HomeScreen())
+			NavHost(Home) {
+				Composer<Home> { HomeScreen() }
+				Composer<Profile> { ProfileScreen() }
+			}
 		}
 	}
 }
