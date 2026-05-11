@@ -5,9 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import java.util.ArrayDeque
 
 @Composable
 fun NavHost(
@@ -17,15 +17,15 @@ fun NavHost(
 	val navHost = remember { NavHost(defaultKey) }
 	
 	DisposableEffect(Unit) {
-		NavigationManager.controllerStack.push(NavigationController(navHost))
+		controllerStack.push(NavigationController(navHost))
 		
 		onDispose {
-			NavigationManager.controllerStack.pop()
+			controllerStack.pop()
 		}
 	}
 
 	BackHandler(enabled = navHost.backlogStack.isNotEmpty()) { 
-		navHost.currentKey = navHost.backlogStack.pop()
+		navHost.currentKey = navHost.backlogStack.removeLast()
 	}
 	
 	navHost.compose()
@@ -35,7 +35,7 @@ class NavHost(
 	defaultKey: Any,
 ) {
 	internal var currentKey: Any by mutableStateOf(defaultKey)
-	internal val backlogStack = ArrayDeque<Any>()
+	internal val backlogStack = mutableStateListOf<Any>()
 	
 	@Composable
 	fun <T> Composer(clazz: Class<T>, compose: @Composable () -> Unit) {
@@ -49,5 +49,3 @@ class NavHost(
 		Composer(T::class.java, compose)
 	}
 }
-
-val localNavController get() = NavigationManager.controllerStack.last()

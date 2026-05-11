@@ -1,5 +1,6 @@
 package dev.pandasystems.logmypos_client.menus
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -73,6 +74,10 @@ fun HomeScreen() {
 				var searchWidgetOpen by remember { mutableStateOf(false) }
 				val fieldShape = RoundedCornerShape(100)
 				val focusManager = LocalFocusManager.current
+				
+				BackHandler(searchWidgetOpen) {
+					searchWidgetOpen = false
+				}
 
 				BasicTextField(
 					value = searchBarState,
