@@ -74,9 +74,8 @@ fun ProfileScreen() {
 							)
 							.padding(24.dp)
 					) {
-						Column(
-							modifier = Modifier.fillMaxWidth(),
-							horizontalAlignment = Alignment.CenterHorizontally
+						Row(
+							verticalAlignment = Alignment.CenterVertically,
 						) {
 							// Avatar
 							Box(
@@ -93,42 +92,26 @@ fun ProfileScreen() {
 									tint = MaterialTheme.colorScheme.onPrimary
 								)
 							}
-
-							Spacer(modifier = Modifier.height(16.dp))
-
-							// User Name
-							Text(
-								"John Doe",
-								fontSize = 20.sp,
-								fontWeight = FontWeight.Bold,
-								color = MaterialTheme.colorScheme.onSurface
-							)
-
-							Spacer(modifier = Modifier.height(4.dp))
-
-							// User Email
-							Text(
-								"john.doe@example.com",
-								fontSize = 14.sp,
-								color = MaterialTheme.colorScheme.onSurfaceVariant
-							)
-
-							Spacer(modifier = Modifier.height(12.dp))
-
-							// User Status Badge
-							Box(
-								modifier = Modifier
-									.background(
-										MaterialTheme.colorScheme.primaryContainer,
-										RoundedCornerShape(20.dp)
-									)
-									.padding(horizontal = 12.dp, vertical = 6.dp)
+							
+							Column(
+								modifier = Modifier.fillMaxSize(),
+								horizontalAlignment = Alignment.CenterHorizontally,
 							) {
+								// User Name
 								Text(
-									"Active",
-									fontSize = 12.sp,
-									color = MaterialTheme.colorScheme.onPrimaryContainer,
-									fontWeight = FontWeight.SemiBold
+									"John Doe",
+									fontSize = 20.sp,
+									fontWeight = FontWeight.Bold,
+									color = MaterialTheme.colorScheme.onSurface
+								)
+
+								Spacer(modifier = Modifier.height(4.dp))
+
+								// User Email
+								Text(
+									"john.doe@example.com",
+									fontSize = 14.sp,
+									color = MaterialTheme.colorScheme.onSurfaceVariant
 								)
 							}
 						}
