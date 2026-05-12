@@ -1,6 +1,6 @@
 package dev.pandasystems.logmypos_client.navigation
 
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.compositionLocalOf
 
 class NavigationController(val navHost: NavHost) {
 	fun navigate(
@@ -26,4 +26,4 @@ class NavigationController(val navHost: NavHost) {
 }
 
 val LocalNavController =
-	staticCompositionLocalOf<NavigationController> { error("CompositionLocal LocalNavController not present") }
+	compositionLocalOf<NavigationController?> { null }

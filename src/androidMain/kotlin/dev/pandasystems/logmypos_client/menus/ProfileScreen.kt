@@ -26,131 +26,130 @@ data class Profile(
 @Composable
 fun ProfileScreen() {
 	val navController = LocalNavController.current
-	MaterialTheme {
-		Box(
+
+	Box(
+		modifier = Modifier
+			.fillMaxSize()
+			.background(MaterialTheme.colorScheme.background)
+	) {
+		LazyColumn(
 			modifier = Modifier
 				.fillMaxSize()
-				.background(MaterialTheme.colorScheme.background)
+				.systemBarsPadding()
 		) {
-			LazyColumn(
-				modifier = Modifier
-					.fillMaxSize()
-					.systemBarsPadding()
-			) {
-				// Header with back button
-				item {
-					Box(
-						modifier = Modifier
-							.fillMaxWidth()
-							.height(56.dp),
-						contentAlignment = Alignment.CenterStart
+			// Header with back button
+			item {
+				Box(
+					modifier = Modifier
+						.fillMaxWidth()
+						.height(56.dp),
+					contentAlignment = Alignment.CenterStart
+				) {
+					IconButton(
+						onClick = { navController?.navigateBack() },
+						modifier = Modifier.align(Alignment.CenterStart)
 					) {
-						IconButton(
-							onClick = { navController.navigateBack() },
-							modifier = Modifier.align(Alignment.CenterStart)
-						) {
-							Icon(Tabler.Outline.ArrowLeft, contentDescription = "Back")
-						}
-						Text(
-							"Profile",
-							modifier = Modifier
-								.align(Alignment.Center),
-							fontSize = 20.sp,
-							fontWeight = FontWeight.Bold
-						)
+						Icon(Tabler.Outline.ArrowLeft, contentDescription = "Back")
 					}
-					HorizontalDivider()
-				}
-
-				// Profile Card Section
-				item {
-					Box(
+					Text(
+						"Profile",
 						modifier = Modifier
-							.fillMaxWidth()
-							.padding(16.dp)
-							.background(
-								MaterialTheme.colorScheme.surfaceContainer,
-								RoundedCornerShape(12.dp)
-							)
-							.padding(24.dp)
-					) {
-						Row(
-							verticalAlignment = Alignment.CenterVertically,
-						) {
-							// Avatar
-							Avatar()
-							
-							Column(
-								modifier = Modifier.fillMaxSize(),
-								horizontalAlignment = Alignment.CenterHorizontally,
-							) {
-								// User Name
-								Text(
-									"John Doe",
-									fontSize = 20.sp,
-									fontWeight = FontWeight.Bold,
-									color = MaterialTheme.colorScheme.onSurface
-								)
-
-								Spacer(modifier = Modifier.height(4.dp))
-
-								// User Email
-								Text(
-									"john.doe@example.com",
-									fontSize = 14.sp,
-									color = MaterialTheme.colorScheme.onSurfaceVariant
-								)
-							}
-						}
-					}
-				}
-
-				// Menu Items
-				item {
-					Spacer(modifier = Modifier.height(8.dp))
-				}
-
-				items(profileMenuItems.size) { index ->
-					val item = profileMenuItems[index]
-					ProfileMenuItem(
-						icon = item.icon,
-						title = item.title,
-						onClick = item.onClick
+							.align(Alignment.Center),
+						fontSize = 20.sp,
+						fontWeight = FontWeight.Bold
 					)
-					if (index < profileMenuItems.size - 1) {
-						HorizontalDivider(
-							modifier = Modifier.padding(horizontal = 16.dp),
-							thickness = 0.5.dp
-						)
-					}
 				}
+				HorizontalDivider()
+			}
 
-				// Logout Button
-				item {
-					Spacer(modifier = Modifier.height(8.dp))
-					Button(
-						onClick = { /* Handle logout */ },
-						modifier = Modifier
-							.fillMaxWidth()
-							.padding(16.dp)
-							.height(48.dp),
-						colors = ButtonDefaults.buttonColors(
-							containerColor = MaterialTheme.colorScheme.errorContainer,
-							contentColor = MaterialTheme.colorScheme.onErrorContainer
-						),
-						shape = RoundedCornerShape(8.dp)
-					) {
-						Icon(
-							Tabler.Outline.Logout,
-							contentDescription = null,
-							modifier = Modifier
-								.size(20.dp)
-								.padding(end = 8.dp)
+			// Profile Card Section
+			item {
+				Box(
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(16.dp)
+						.background(
+							MaterialTheme.colorScheme.surfaceContainer,
+							RoundedCornerShape(12.dp)
 						)
-						Text("Logout", fontWeight = FontWeight.Medium)
+						.padding(24.dp)
+				) {
+					Row(
+						verticalAlignment = Alignment.CenterVertically,
+					) {
+						// Avatar
+						Avatar()
+
+						Column(
+							modifier = Modifier.fillMaxSize(),
+							horizontalAlignment = Alignment.CenterHorizontally,
+						) {
+							// User Name
+							Text(
+								"John Doe",
+								fontSize = 20.sp,
+								fontWeight = FontWeight.Bold,
+								color = MaterialTheme.colorScheme.onSurface
+							)
+
+							Spacer(modifier = Modifier.height(4.dp))
+
+							// User Email
+							Text(
+								"john.doe@example.com",
+								fontSize = 14.sp,
+								color = MaterialTheme.colorScheme.onSurfaceVariant
+							)
+						}
 					}
-					Spacer(modifier = Modifier.height(24.dp))
 				}
+			}
+
+			// Menu Items
+			item {
+				Spacer(modifier = Modifier.height(8.dp))
+			}
+
+			items(profileMenuItems.size) { index ->
+				val item = profileMenuItems[index]
+				ProfileMenuItem(
+					icon = item.icon,
+					title = item.title,
+					onClick = item.onClick
+				)
+				if (index < profileMenuItems.size - 1) {
+					HorizontalDivider(
+						modifier = Modifier.padding(horizontal = 16.dp),
+						thickness = 0.5.dp
+					)
+				}
+			}
+
+			// Logout Button
+			item {
+				Spacer(modifier = Modifier.height(8.dp))
+				Button(
+					onClick = { /* Handle logout */ },
+					modifier = Modifier
+						.fillMaxWidth()
+						.padding(16.dp)
+						.height(48.dp),
+					colors = ButtonDefaults.buttonColors(
+						containerColor = MaterialTheme.colorScheme.errorContainer,
+						contentColor = MaterialTheme.colorScheme.onErrorContainer
+					),
+					shape = RoundedCornerShape(8.dp)
+				) {
+					Icon(
+						Tabler.Outline.Logout,
+						contentDescription = null,
+						modifier = Modifier
+							.size(20.dp)
+							.padding(end = 8.dp)
+					)
+					Text("Logout", fontWeight = FontWeight.Medium)
+				}
+				Spacer(modifier = Modifier.height(24.dp))
 			}
 		}
 	}
