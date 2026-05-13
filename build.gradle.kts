@@ -14,39 +14,32 @@ repositories {
 	maven("https://api.mapbox.com/downloads/v2/releases/maven")
 }
 
+dependencies {
+
+	implementation(libs.compose.runtime)
+	implementation(libs.compose.foundation)
+	implementation(libs.compose.material3)
+	implementation(libs.compose.ui)
+	implementation(libs.compose.components.resources)
+	implementation(libs.compose.uiToolingPreview)
+
+	implementation(libs.androidx.activity.compose)
+	implementation(libs.androidx.lifecycle.viewmodelCompose)
+	implementation(libs.androidx.lifecycle.runtimeCompose)
+
+	implementation(libs.mapbox.map)
+	implementation(libs.mapbox.android)
+
+	implementation(libs.tablericons.outline)
+	implementation(libs.tablericons.filled)
+
+	debugImplementation(libs.compose.uiTooling)
+}
+
 kotlin {
 	androidTarget {
 		compilerOptions {
 			jvmTarget.set(JvmTarget.JVM_17)
-		}
-	}
-
-	sourceSets {
-		androidMain.dependencies {
-			implementation(libs.compose.uiToolingPreview)
-			implementation(libs.androidx.activity.compose)
-			implementation(libs.mapbox.android)
-		}
-		
-		commonMain.dependencies {
-			implementation(libs.compose.runtime)
-			implementation(libs.compose.foundation)
-			implementation(libs.compose.material3)
-			implementation(libs.compose.ui)
-			implementation(libs.compose.components.resources)
-			implementation(libs.compose.uiToolingPreview)
-			
-			implementation(libs.androidx.lifecycle.viewmodelCompose)
-			implementation(libs.androidx.lifecycle.runtimeCompose)
-
-			implementation(libs.mapbox.map)
-			
-			implementation(libs.tablericons.outline)
-			implementation(libs.tablericons.filled)
-		}
-		
-		commonTest.dependencies {
-			implementation(libs.kotlin.test)
 		}
 	}
 }
@@ -79,9 +72,5 @@ android {
 	buildFeatures {
 		compose = true
 	}
-}
-
-dependencies {
-	debugImplementation(libs.compose.uiTooling)
 }
 
