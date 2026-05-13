@@ -110,10 +110,11 @@ fun ProfileScreen() {
 				Spacer(modifier = Modifier.height(8.dp))
 			}
 
+			val profileMenuItems = getProfileMenuItems()
 			items(profileMenuItems.size) { index ->
 				val item = profileMenuItems[index]
 				ProfileMenuItem(
-					icon = item.icon,
+					icon = { item.icon() },
 					title = item.title,
 					onClick = item.onClick
 				)
@@ -215,8 +216,9 @@ data class ProfileMenuItemData(
 	val onClick: () -> Unit
 )
 
+
 // Menu items list
-val profileMenuItems = listOf(
+private fun getProfileMenuItems(): List<ProfileMenuItemData> = listOf(
 	ProfileMenuItemData(
 		icon = { Icon(Tabler.Outline.User, contentDescription = null) },
 		title = "Edit Profile",
