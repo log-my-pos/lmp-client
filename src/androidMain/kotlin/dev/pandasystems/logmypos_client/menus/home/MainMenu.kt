@@ -28,24 +28,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.MapSearch
 import dev.pandasystems.logmypos_client.components.Avatar
-import dev.pandasystems.logmypos_client.menus.Profile
-import dev.pandasystems.logmypos_client.navigation.LocalNavController
+import dev.pandasystems.logmypos_client.menus.ProfileRoute
 import java.util.*
-
-
-object MainHomeMenu
 
 @Composable
 @Preview
-fun MainHomeMenu() {
+fun MainHomeMenu(navController: NavController? = null) {
 	val searchBarState = remember { mutableStateOf("") }
 	val searchWidgetOpenState = remember { mutableStateOf(false) }
 
-	CustomSearchBar(searchBarState, searchWidgetOpenState)
+	CustomSearchBar(searchBarState, searchWidgetOpenState, navController)
 	SearchMenu(searchBarState, searchWidgetOpenState)
 }
 
@@ -87,7 +84,11 @@ private fun SearchMenu(
 }
 
 @Composable
-private fun CustomSearchBar(searchBarState: MutableState<String>, searchWidgetOpenState: MutableState<Boolean>) {
+private fun CustomSearchBar(
+	searchBarState: MutableState<String>,
+	searchWidgetOpenState: MutableState<Boolean>,
+	navController: NavController?
+) {
 	val fieldShape = RoundedCornerShape(100)
 	val interactionSource = remember { MutableInteractionSource() }
 
@@ -111,7 +112,7 @@ private fun CustomSearchBar(searchBarState: MutableState<String>, searchWidgetOp
 		interactionSource = interactionSource,
 		modifier = Modifier.getSearchBarModifier(searchWidgetOpenState.value, fieldShape),
 		decorationBox = { innerTextField ->
-			SearchBarDecorationBox(innerTextField, searchBarState, searchWidgetOpenState, fieldShape)
+			SearchBarDecorationBox(innerTextField, searchBarState, searchWidgetOpenState, fieldShape, navController)
 		}
 	)
 }
@@ -139,7 +140,8 @@ private fun SearchBarDecorationBox(
 	innerTextField: @Composable () -> Unit,
 	searchBarState: MutableState<String>,
 	searchWidgetOpenState: MutableState<Boolean>,
-	fieldShape: RoundedCornerShape
+	fieldShape: RoundedCornerShape,
+	navController: NavController?
 ) {
 	Row(
 		modifier = Modifier
@@ -168,7 +170,7 @@ private fun SearchBarDecorationBox(
 			innerTextField()
 		}
 
-		ProfileButton(searchWidgetOpenState)
+		ProfileButton(searchWidgetOpenState, navController)
 	}
 }
 
@@ -228,19 +230,21 @@ private fun SearchIcon() {
 }
 
 @Composable
-private fun ProfileButton(searchWidgetOpenState: MutableState<Boolean>) {
-	val navController = LocalNavController.current
+private fun ProfileButton(
+	searchWidgetOpenState: MutableState<Boolean>,
+	navController: NavController?
+) {
 	val interactionSource = remember { MutableInteractionSource() }
 
 	Box(
 		modifier = Modifier
 			.size(44.dp)
 			.clickable(
-				enabled = searchWidgetOpenState.value,
 				interactionSource = interactionSource,
 				indication = null,
 				onClick = {
-					navController?.navigate(Profile(UUID.randomUUID()))
+					println("Profile button clicked")
+					navController?.navigate(ProfileRoute(UUID.randomUUID().toString()))
 				}
 			),
 		contentAlignment = Alignment.Center

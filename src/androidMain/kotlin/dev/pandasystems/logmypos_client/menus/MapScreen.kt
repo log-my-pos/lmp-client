@@ -1,4 +1,4 @@
-package dev.pandasystems.logmypos_client.menus.home
+package dev.pandasystems.logmypos_client.menus
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,17 +9,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
-import dev.pandasystems.logmypos_client.navigation.NavHost
+import dev.pandasystems.logmypos_client.menus.home.MainHomeMenu
+import kotlinx.serialization.Serializable
 
-object Home
+@Serializable
+data object MapRoute
 
 @Preview
 @Composable
-fun HomeScreen() {
+fun MapScreen(
+	navController: NavHostController? = null,
+) {
 	Box(modifier = Modifier.fillMaxSize()) {
 		Map()
 
@@ -28,9 +33,7 @@ fun HomeScreen() {
 				.align(Alignment.TopCenter)
 				.fillMaxSize()
 		) {
-			NavHost(MainHomeMenu) {
-				Composer<MainHomeMenu> { MainHomeMenu() }
-			}
+			MainHomeMenu(navController)
 		}
 	}
 }

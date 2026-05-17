@@ -12,21 +12,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.*
 import dev.pandasystems.logmypos_client.components.Avatar
-import dev.pandasystems.logmypos_client.navigation.LocalNavController
+import kotlinx.serialization.Serializable
 import java.util.*
 
-data class Profile(
-	val profileId: UUID
+@Serializable
+data class ProfileRoute(
+	val profileId: String
 )
 
 @Preview
 @Composable
-fun ProfileScreen() {
-	val navController = LocalNavController.current
-
+fun ProfileScreen(
+	navController: NavHostController? = null,
+	profileUUID: UUID = UUID.randomUUID(),
+) {
 	Box(
 		modifier = Modifier
 			.fillMaxSize()
@@ -46,7 +49,7 @@ fun ProfileScreen() {
 					contentAlignment = Alignment.CenterStart
 				) {
 					IconButton(
-						onClick = { navController?.navigateBack() },
+						onClick = { navController?.popBackStack() },
 						modifier = Modifier.align(Alignment.CenterStart)
 					) {
 						Icon(Tabler.Outline.ArrowLeft, contentDescription = "Back")
@@ -98,6 +101,15 @@ fun ProfileScreen() {
 							Text(
 								"john.doe@example.com",
 								fontSize = 14.sp,
+								color = MaterialTheme.colorScheme.onSurfaceVariant
+							)
+							
+							Spacer(modifier = Modifier.height(8.dp))
+							
+							// User UUID
+							Text(
+								profileUUID.toString(),
+								fontSize = 10.sp,
 								color = MaterialTheme.colorScheme.onSurfaceVariant
 							)
 						}
