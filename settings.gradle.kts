@@ -12,3 +12,4 @@ plugins {
 
 rootProject.name = "LogMyPos-Client"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+include("composeApp")
