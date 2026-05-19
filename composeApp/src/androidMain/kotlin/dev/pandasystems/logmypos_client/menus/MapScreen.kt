@@ -10,11 +10,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
-import dev.pandasystems.logmypos_client.menus.home.MainHomeMenu
+import dev.pandasystems.logmypos_client.menus.mapscreen.MapLocationEntryOverlay
+import dev.pandasystems.logmypos_client.menus.mapscreen.MapLocationEntryOverlayRoute
+import dev.pandasystems.logmypos_client.menus.mapscreen.MapMainOverlay
+import dev.pandasystems.logmypos_client.menus.mapscreen.MapMainOverlayRoute
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -25,6 +31,8 @@ data object MapRoute
 fun MapScreen(
 	navController: NavHostController? = null,
 ) {
+	val mapNavController = rememberNavController()
+
 	Box(modifier = Modifier.fillMaxSize()) {
 		Map()
 
@@ -33,7 +41,10 @@ fun MapScreen(
 				.align(Alignment.TopCenter)
 				.fillMaxSize()
 		) {
-			MainHomeMenu(navController)
+			NavHost(mapNavController, startDestination = MapMainOverlayRoute) {
+				composable<MapMainOverlayRoute> { MapMainOverlay(navController, mapNavController) }
+				composable<MapLocationEntryOverlayRoute> { MapLocationEntryOverlay(mapNavController) }
+			}
 		}
 	}
 }
