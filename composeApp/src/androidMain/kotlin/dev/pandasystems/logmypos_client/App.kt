@@ -7,12 +7,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import dev.pandasystems.logmypos_client.menus.MapRoute
-import dev.pandasystems.logmypos_client.menus.MapScreen
-import dev.pandasystems.logmypos_client.menus.ProfileRoute
-import dev.pandasystems.logmypos_client.menus.ProfileScreen
+import dev.pandasystems.logmypos_client.menus.*
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
-import java.util.UUID
+import java.net.URI
+import java.util.*
 
 @Composable
 @Preview
@@ -26,7 +24,15 @@ fun App() {
 			composable<MapRoute> { MapScreen(navController) }
 			composable<ProfileRoute> { backStackEntry ->
 				val profile = backStackEntry.toRoute<ProfileRoute>()
-				ProfileScreen(navController, UUID.fromString(profile.profileId)) }
+				ProfileScreen(navController, UUID.fromString(profile.profileId))
+			}
+			composable<LocationCreationRoute> { backStackEntry ->
+				val route = backStackEntry.toRoute<LocationCreationRoute>()
+				LocationCreationScreen(
+					navController,
+					route.imageUris.map { URI(it) }
+				)
+			}
 		}
 	}
 }

@@ -40,6 +40,7 @@ import androidx.navigation.NavHostController
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.*
 import dev.pandasystems.logmypos_client.components.Avatar
+import dev.pandasystems.logmypos_client.menus.LocationCreationRoute
 import dev.pandasystems.logmypos_client.menus.ProfileRoute
 import dev.pandasystems.logmypos_client.theme.backgroundLightColor
 import dev.pandasystems.logmypos_client.theme.shadowColor
@@ -83,7 +84,7 @@ fun MapMainOverlay(
 				.systemBarsPadding()
 				.padding(16.dp)
 		) {
-			NewButton(mapNavController)
+			NewEntryButton(mapNavController)
 		}
 	}
 }
@@ -291,14 +292,14 @@ private fun ProfileButton(
 }
 
 @Composable
-private fun NewButton(mapNavController: NavHostController?) {
+private fun NewEntryButton(mapNavController: NavHostController?) {
 	var isExpanded by remember { mutableStateOf(false) }
 	val context = LocalContext.current
 
 	val pickMedia = rememberLauncherForActivityResult(
 		contract = ActivityResultContracts.PickMultipleVisualMedia()
 	) { uris ->
-
+		mapNavController?.navigate(LocationCreationRoute(uris.map { it.toString() }))
 	}
 
 
