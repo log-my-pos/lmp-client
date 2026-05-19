@@ -312,7 +312,9 @@ private fun NewButton(mapNavController: NavHostController?) {
 		}
 	}
 
-	Column {
+	Column(
+		horizontalAlignment = Alignment.CenterHorizontally,
+	) {
 		// Gallery
 		AnimatedVisibility(
 			visible = isExpanded,
@@ -321,7 +323,7 @@ private fun NewButton(mapNavController: NavHostController?) {
 		) {
 			IconButton(
 				modifier = Modifier
-					.size(52.dp),
+					.size(44.dp),
 				onClick = {
 					pickMedia.launch(
 						PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -334,7 +336,7 @@ private fun NewButton(mapNavController: NavHostController?) {
 				Icon(
 					Tabler.Outline.PhotoPlus,
 					contentDescription = "",
-					modifier = Modifier.size(32.dp)
+					modifier = Modifier.size(22.dp)
 				)
 			}
 		}
@@ -349,7 +351,7 @@ private fun NewButton(mapNavController: NavHostController?) {
 		) {
 			IconButton(
 				modifier = Modifier
-					.size(52.dp),
+					.size(44.dp),
 				onClick = {
 					val imageFile = File(context.cacheDir, "camera_${System.currentTimeMillis()}.jpg")
 					val uri = FileProvider.getUriForFile(
@@ -367,7 +369,7 @@ private fun NewButton(mapNavController: NavHostController?) {
 				Icon(
 					Tabler.Outline.CameraPlus,
 					contentDescription = "",
-					modifier = Modifier.size(32.dp)
+					modifier = Modifier.size(22.dp)
 				)
 			}
 		}
@@ -377,7 +379,7 @@ private fun NewButton(mapNavController: NavHostController?) {
 		// Expand button
 		IconButton(
 			modifier = Modifier
-				.size(52.dp),
+				.size(50.dp),
 			onClick = { isExpanded = !isExpanded },
 			colors = iconButtonColors(
 				containerColor = animateColorAsState(if (isExpanded) Color(0xFF272726) else backgroundLightColor).value,
@@ -389,7 +391,7 @@ private fun NewButton(mapNavController: NavHostController?) {
 				contentDescription = "",
 				modifier = Modifier
 					.rotate(animateFloatAsState(if (isExpanded) 180f + 45f else 0f).value)
-					.size(32.dp)
+					.size(28.dp)
 			)
 		}
 	}
