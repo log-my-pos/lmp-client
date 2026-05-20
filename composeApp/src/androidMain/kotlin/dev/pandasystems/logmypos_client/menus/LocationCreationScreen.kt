@@ -212,10 +212,10 @@ private fun ImageEntry(
 			onClick = onRemove,
 			modifier = Modifier
 				.align(Alignment.TopEnd)
+				.padding(4.dp)
 				.size(32.dp),
 			colors = IconButtonDefaults.iconButtonColors(
-				containerColor = Color.Transparent,
-				contentColor = Color(0xFFB71C1C)
+				containerColor = Color.Transparent
 			)
 		) {
 			Icon(Tabler.Outline.Minus, contentDescription = null)
