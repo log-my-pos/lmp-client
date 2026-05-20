@@ -35,6 +35,8 @@ dependencies {
 	implementation(libs.tablericons.outline)
 	implementation(libs.tablericons.filled)
 
+	implementation(libs.coil)
+
 	debugImplementation(libs.compose.uiTooling)
 }
 

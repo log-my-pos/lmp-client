@@ -1,3 +1,6 @@
 <paths>
+    <!-- Allow files from the app cache directory -->
     <cache-path name="cache" path="."/>
+    <!-- Also include external cache in case the camera/write path resolves there on some devices -->
+    <external-cache-path name="external_cache" path="."/>
 </paths>

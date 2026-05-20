@@ -42,7 +42,7 @@ import com.composables.icons.tabler.outline.*
 import dev.pandasystems.logmypos_client.components.Avatar
 import dev.pandasystems.logmypos_client.menus.LocationCreationRoute
 import dev.pandasystems.logmypos_client.menus.ProfileRoute
-import dev.pandasystems.logmypos_client.theme.backgroundLightColor
+import dev.pandasystems.logmypos_client.theme.interactableBackgroundLightColor
 import dev.pandasystems.logmypos_client.theme.shadowColor
 import dev.pandasystems.logmypos_client.theme.textDarkColor
 import dev.pandasystems.logmypos_client.theme.textLightColor
@@ -84,7 +84,7 @@ fun MapMainOverlay(
 				.systemBarsPadding()
 				.padding(16.dp)
 		) {
-			NewEntryButton(mapNavController)
+			NewEntryButtons(rootNavController)
 		}
 	}
 }
@@ -292,24 +292,24 @@ private fun ProfileButton(
 }
 
 @Composable
-private fun NewEntryButton(mapNavController: NavHostController?) {
+private fun NewEntryButtons(navController: NavController?) {
 	var isExpanded by remember { mutableStateOf(false) }
 	val context = LocalContext.current
 
 	val pickMedia = rememberLauncherForActivityResult(
 		contract = ActivityResultContracts.PickMultipleVisualMedia()
 	) { uris ->
-		mapNavController?.navigate(LocationCreationRoute(uris.map { it.toString() }))
+		navController?.navigate(LocationCreationRoute(uris.map { it.toString() }))
 	}
 
-
 	var cameraUri by remember { mutableStateOf<Uri?>(null) }
-
 	val cameraLauncher = rememberLauncherForActivityResult(
 		contract = ActivityResultContracts.TakePicture()
 	) { success ->
 		if (success) {
-			println("Captured image: $cameraUri")
+			cameraUri?.let { uri ->
+				navController?.navigate(LocationCreationRoute(listOf(uri.toString())))
+			}
 		}
 	}
 
@@ -331,7 +331,7 @@ private fun NewEntryButton(mapNavController: NavHostController?) {
 					)
 				},
 				colors = iconButtonColors(
-					containerColor = backgroundLightColor,
+					containerColor = interactableBackgroundLightColor,
 				)
 			) {
 				Icon(
@@ -364,7 +364,7 @@ private fun NewEntryButton(mapNavController: NavHostController?) {
 					cameraLauncher.launch(uri)
 				},
 				colors = iconButtonColors(
-					containerColor = backgroundLightColor,
+					containerColor = interactableBackgroundLightColor,
 				)
 			) {
 				Icon(
@@ -383,7 +383,7 @@ private fun NewEntryButton(mapNavController: NavHostController?) {
 				.size(50.dp),
 			onClick = { isExpanded = !isExpanded },
 			colors = iconButtonColors(
-				containerColor = animateColorAsState(if (isExpanded) Color(0xFF272726) else backgroundLightColor).value,
+				containerColor = animateColorAsState(if (isExpanded) Color(0xFF272726) else interactableBackgroundLightColor).value,
 				contentColor = animateColorAsState(if (isExpanded) textLightColor else textDarkColor).value
 			)
 		) {

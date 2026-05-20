@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.2"
+agp = "9.0.1"
 
 android-compileSdk = "36"
 android-minSdk = "24"
@@ -7,8 +7,8 @@ android-targetSdk = "36"
 androidx-activity = "1.13.0"
 androidx-lifecycle = "2.10.0"
 
-kotlin = "2.3.20"
-composeMultiplatform = "1.10.3"
+kotlin = "2.3.21"
+composeMultiplatform = "1.11.0"
 composeHotReload = "1.1.1"
 material3 = "1.10.0-alpha05"
 
@@ -40,6 +40,8 @@ mapbox-android = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapb
 
 tablericons-outline = { module = "com.composables:icons-tabler-outline-cmp", version.ref = "composables-icons" }
 tablericons-filled = { module = "com.composables:icons-tabler-filled-cmp", version.ref = "composables-icons" }
+
+coil = { module = "io.coil-kt:coil-compose", version = "2.7.0" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

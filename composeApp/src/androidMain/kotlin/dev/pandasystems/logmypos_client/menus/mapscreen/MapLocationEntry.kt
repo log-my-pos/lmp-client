@@ -14,8 +14,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import dev.pandasystems.logmypos_client.theme.backgroundLightColor
 import dev.pandasystems.logmypos_client.theme.borderLightColor
+import dev.pandasystems.logmypos_client.theme.interactableBackgroundLightColor
 import dev.pandasystems.logmypos_client.theme.shadowColor
 import kotlinx.serialization.Serializable
 
@@ -63,7 +63,7 @@ private fun Card(
 				.size(240.dp)
 				.dropShadow(roundedShape, Shadow(12.dp, shadowColor)),
 			shape = roundedShape,
-			color = backgroundLightColor,
+			color = interactableBackgroundLightColor,
 			border = BorderStroke(4.dp, borderLightColor),
 		) {
 			content()

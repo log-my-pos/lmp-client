@@ -30,8 +30,8 @@ data object MapRoute
 @Composable
 fun MapScreen(
 	navController: NavHostController? = null,
+	mapNavController: NavHostController = rememberNavController(),
 ) {
-	val mapNavController = rememberNavController()
 
 	Box(modifier = Modifier.fillMaxSize()) {
 		Map()
