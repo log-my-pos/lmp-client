@@ -9,10 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
@@ -32,8 +34,10 @@ fun MapScreen(
 	navController: NavHostController? = null,
 	mapNavController: NavHostController = rememberNavController(),
 ) {
-
-	Box(modifier = Modifier.fillMaxSize()) {
+	Box(
+		modifier = Modifier
+			.fillMaxSize()
+	) {
 		Map()
 
 		Box(
@@ -44,6 +48,13 @@ fun MapScreen(
 			NavHost(mapNavController, startDestination = MapMainOverlayRoute) {
 				composable<MapMainOverlayRoute> { MapMainOverlay(navController, mapNavController) }
 				composable<MapLocationEntryOverlayRoute> { MapLocationEntryOverlay(mapNavController) }
+				composable<LocationCreationRoute> { backStackEntry ->
+					val route = backStackEntry.toRoute<LocationCreationRoute>()
+					LocationCreationScreen(
+						navController,
+						route.imageUris.map { it.toUri() },
+					)
+				}
 			}
 		}
 	}
@@ -52,7 +63,8 @@ fun MapScreen(
 @Composable
 private fun Map() {
 	MapboxMap(
-		modifier = Modifier.fillMaxSize(),
+		modifier = Modifier
+			.fillMaxSize(),
 		style = { MapStyle(style = "mapbox://styles/julianmaggio/cmoijn6tp002201sfdm0nab23") },
 		mapViewportState = rememberMapViewportState {
 			setCameraOptions {

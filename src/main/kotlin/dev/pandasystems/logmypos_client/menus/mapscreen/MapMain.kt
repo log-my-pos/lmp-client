@@ -84,7 +84,7 @@ fun MapMainOverlay(
 				.systemBarsPadding()
 				.padding(16.dp)
 		) {
-			NewEntryButtons(rootNavController)
+			NewEntryButtons(mapNavController)
 		}
 	}
 }

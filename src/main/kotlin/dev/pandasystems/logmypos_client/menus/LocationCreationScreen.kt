@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -45,14 +46,14 @@ data class LocationCreationRoute(
 
 @Composable
 fun LocationCreationScreen(
-	mapNavController: NavController? = null,
+	navController: NavController? = null,
 	imageUris: List<Uri> = emptyList(),
 ) {
 	val images = remember { mutableStateListOf(*imageUris.toTypedArray()) }
 
 	Surface(
 		modifier = Modifier
-			.fillMaxSize()
+			.fillMaxSize(),
 	) {
 		Box(
 			modifier = Modifier
@@ -61,7 +62,8 @@ fun LocationCreationScreen(
 				.padding(10.dp)
 		) {
 			Column(
-				modifier = Modifier.fillMaxWidth(),
+				modifier = Modifier
+					.fillMaxWidth(),
 			) {
 				Images(images)
 
@@ -73,6 +75,14 @@ fun LocationCreationScreen(
 						.height(150.dp),
 					state = rememberTextFieldState(),
 					label = { Text("Description") }
+				)
+
+				OutlinedTextField(
+					modifier = Modifier
+						.fillMaxWidth(),
+					state = rememberTextFieldState(),
+					label = { Text("Address") },
+					lineLimits = TextFieldLineLimits.SingleLine,
 				)
 			}
 
@@ -110,8 +120,8 @@ private fun Images(images: MutableList<Uri>) {
 		Box(
 			modifier = Modifier
 				.fillMaxWidth()
-				.background(secondaryBackgroundLightColor, shape = RoundedCornerShape(20.dp))
-				.clip(RoundedCornerShape(20.dp))
+				.background(secondaryBackgroundLightColor, shape = RoundedCornerShape(24.dp))
+				.clip(RoundedCornerShape(24.dp))
 		) {
 			if (images.isNotEmpty()) {
 				LazyVerticalGrid(
@@ -196,26 +206,31 @@ private fun ImageEntry(
 	uri: Uri,
 	onRemove: () -> Unit,
 ) {
-	Box {
+	val buttonShape = RoundedCornerShape(bottomStart = 12.dp)
+
+	Box(
+		modifier = Modifier
+			.clip(RoundedCornerShape(16.dp))
+	) {
 		AsyncImage(
 			model = uri,
 			contentDescription = null,
 			modifier = Modifier
 				.fillMaxWidth()
 				.aspectRatio(1f)
-				.clip(RoundedCornerShape(12.dp))
 				.background(Color.Gray),
 			contentScale = ContentScale.Crop
 		)
 
 		IconButton(
 			onClick = onRemove,
+			shape = buttonShape,
 			modifier = Modifier
 				.align(Alignment.TopEnd)
-				.padding(4.dp)
 				.size(32.dp),
 			colors = IconButtonDefaults.iconButtonColors(
-				containerColor = Color.Transparent
+				containerColor = Color(0xFFB92A1E).copy(alpha = 0.75f),
+				contentColor = Color(0xFFFFE6E3)
 			)
 		) {
 			Icon(Tabler.Outline.Minus, contentDescription = null)
