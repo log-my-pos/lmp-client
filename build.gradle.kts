@@ -31,6 +31,13 @@ dependencies {
 	implementation(libs.mapbox.map)
 	implementation(libs.mapbox.android)
 
+	implementation(libs.mapbox.search.android)
+	implementation(libs.mapbox.search.android.ui)
+	implementation(libs.mapbox.search.discover)
+	implementation(libs.mapbox.search.place.autocomplete)
+	implementation(libs.mapbox.search.autofill)
+	implementation(libs.mapbox.search.offline)
+
 	implementation(libs.tablericons.outline)
 	implementation(libs.tablericons.filled)
 
