@@ -11,7 +11,18 @@ plugins {
 repositories {
 	mavenCentral()
 	google()
-	maven("https://api.mapbox.com/downloads/v2/releases/maven")
+	// Mapbox Maven repository
+	maven("https://api.mapbox.com/downloads/v2/releases/maven") {
+		authentication {
+			create<BasicAuthentication>("basic")
+		}
+		credentials {
+			// Do not change the username below.
+			// This should always be `mapbox` (not your username).
+			username = "mapbox"
+			password = providers.gradleProperty("mapbox_secret_token").get()
+		}
+	}
 }
 
 dependencies {
@@ -28,8 +39,8 @@ dependencies {
 
 	implementation(libs.jetbrains.navigation)
 
-	implementation(libs.mapbox.map)
-	implementation(libs.mapbox.android)
+	implementation(libs.mapbox.map.compose)
+	implementation(libs.mapbox.map.android)
 
 	implementation(libs.mapbox.search.android)
 	implementation(libs.mapbox.search.android.ui)
@@ -53,7 +64,7 @@ dependencies {
 
 kotlin {
 	compilerOptions {
-		jvmTarget.set(JvmTarget.JVM_17)
+		jvmTarget.set(JvmTarget.JVM_21)
 	}
 }
 
@@ -79,8 +90,8 @@ android {
 		}
 	}
 	compileOptions {
-		sourceCompatibility = JavaVersion.VERSION_17
-		targetCompatibility = JavaVersion.VERSION_17
+		sourceCompatibility = JavaVersion.VERSION_21
+		targetCompatibility = JavaVersion.VERSION_21
 	}
 	buildFeatures {
 		compose = true

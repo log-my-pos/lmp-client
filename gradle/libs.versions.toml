@@ -38,8 +38,8 @@ compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-previ
 
 jetbrains-navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "jetbrains-navigation" }
 
-mapbox-map = { module = "com.mapbox.extension:maps-compose-ndk27", version.ref = "mapbox" }
-mapbox-android = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapbox" }
+mapbox-map-compose = { module = "com.mapbox.extension:maps-compose-ndk27", version.ref = "mapbox" }
+mapbox-map-android = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapbox" }
 
 mapbox-search-android = { module = "com.mapbox.search:mapbox-search-android-ndk27", version.ref = "mapbox-search" }
 mapbox-search-android-ui = { module = "com.mapbox.search:mapbox-search-android-ui-ndk27", version.ref = "mapbox-search" }
