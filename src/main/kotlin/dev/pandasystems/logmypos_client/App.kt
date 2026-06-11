@@ -9,6 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.mapbox.search.autocomplete.PlaceAutocomplete
+import dev.pandasystems.logmypos_client.screen.main.MainRoute
+import dev.pandasystems.logmypos_client.screen.main.MainScreen
 import dev.pandasystems.logmypos_client.screen.main.location.AddLocationRoute
 import dev.pandasystems.logmypos_client.screen.main.location.AddLocationScreen
 import dev.pandasystems.logmypos_client.screen.main.location.LocationDetailRoute
@@ -29,7 +31,7 @@ fun App() {
 		}
 
 		NavHost(navController = navController, startDestination = SearchRoute) {
-//			composable<MainRoute> { MainScreen(navController) }
+			composable<MainRoute> { MainScreen(navController) }
 			composable<SearchRoute> { SearchScreen(navController, rememberTextFieldState(), placeAutocomplete) }
 			composable<LocationDetailRoute> { backStackEntry ->
 				val route: LocationDetailRoute = backStackEntry.toRoute()
