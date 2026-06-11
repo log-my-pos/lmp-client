@@ -26,9 +26,12 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.Search
+import com.composables.icons.tabler.outline.User
 import com.composables.icons.tabler.outline.X
+import com.mapbox.geojson.Point
+import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import dev.pandasystems.logmypos_client.components.InputField
-import dev.pandasystems.logmypos_client.screen.main.search.SearchScreen
 import dev.pandasystems.logmypos_client.theme.Colors
 import kotlinx.serialization.Serializable
 
@@ -55,29 +58,27 @@ fun MainScreen(
 			Box(Modifier
 				.align(Alignment.TopCenter)
 				.zIndex(2f)) { SearchBarComponent(searchState, searchOpenState) }
-
-			SearchScreen(searchOpenState, rootNavController, searchState)
 		}
 	}
 }
 
 @Composable
 private fun MapComponent() {
-//	MapboxMap(
-//		Modifier.fillMaxSize(),
-//		mapViewportState = rememberMapViewportState {
-//			setCameraOptions {
-//				zoom(2.0)
-//				center(Point.fromLngLat(-98.0, 39.5))
-//				pitch(0.0)
-//				bearing(0.0)
-//			}
-//		},
-//		scaleBar = {},
-//		logo = {},
-//		attribution = {},
-//		compass = {}
-//	)
+	MapboxMap(
+		Modifier.fillMaxSize(),
+		mapViewportState = rememberMapViewportState {
+			setCameraOptions {
+				zoom(2.0)
+				center(Point.fromLngLat(-98.0, 39.5))
+				pitch(0.0)
+				bearing(0.0)
+			}
+		},
+		scaleBar = {},
+		logo = {},
+		attribution = {},
+		compass = {}
+	)
 }
 
 @Composable
@@ -148,20 +149,20 @@ private fun SearchBarLeftContent(openState: MutableState<Boolean>, searchState: 
 
 @Composable
 private fun SearchBarRightContent() {
-//	IconButton(
-//		modifier = Modifier
-//			.padding(8.dp)
-//			.size(40.dp),
-//		onClick = {
-//			// TODO: Open Profile
-//		}, colors = IconButtonDefaults.iconButtonColors(contentColor = Colors.text)
-//	) {
-//		Icon(
-//			imageVector = Tabler.Outline.User,
-//			contentDescription = "User profile",
-//			modifier = Modifier
-//				.fillMaxSize()
-//				.padding(8.dp)
-//		)
-//	}
+	IconButton(
+		modifier = Modifier
+			.padding(8.dp)
+			.size(40.dp),
+		onClick = {
+			// TODO: Open Profile
+		}, colors = IconButtonDefaults.iconButtonColors(contentColor = Colors.text)
+	) {
+		Icon(
+			imageVector = Tabler.Outline.User,
+			contentDescription = "User profile",
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(8.dp)
+		)
+	}
 }
