@@ -12,7 +12,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,13 +27,18 @@ import androidx.navigation.compose.rememberNavController
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.MapPin
+import com.composables.icons.tabler.outline.User
 import com.composables.icons.tabler.outline.X
+import com.mapbox.maps.dsl.cameraOptions
+import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.search.autocomplete.PlaceAutocomplete
+import com.mapbox.search.autocomplete.PlaceAutocompleteSuggestion
 import dev.pandasystems.logmypos_client.components.InputField
-import dev.pandasystems.logmypos_client.screen.main.location.AddLocationRoute
+import dev.pandasystems.logmypos_client.screen.main.MainRoute
 import dev.pandasystems.logmypos_client.theme.Colors
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import java.util.*
 import kotlin.math.roundToInt
@@ -41,9 +50,23 @@ private fun SearchScreenPreview() {
         rememberNavController(),
         rememberTextFieldState("Hello World"),
         listOf(
-            SearchEntries("123 Main St, London, UK", "Main St", 1340.0, 120.0),
-            SearchEntries("456 High St, Manchester, UK", "High St", 120320.0, 1000.0),
-        )
+            SearchEntries(
+                "123 Main St, London, UK",
+                "Main St",
+                1340.0,
+                120.0,
+                null
+            ),
+            SearchEntries(
+                "456 High St, Manchester, UK",
+                "High St",
+                120320.0,
+                1000.0,
+                null
+            ),
+        ),
+        null,
+        rememberMapViewportState()
     )
 }
 
@@ -56,6 +79,7 @@ fun SearchScreen(
     navController: NavController,
     searchState: TextFieldState,
     placeAutocomplete: PlaceAutocomplete? = null,
+    mapViewportState: MapViewportState,
 ) {
     var suggestions by remember {
         mutableStateOf<List<SearchEntries>>(emptyList())
@@ -67,7 +91,6 @@ fun SearchScreen(
             suggestions = emptyList()
             return@LaunchedEffect
         }
-        delay(300)
 
         val response = placeAutocomplete?.suggestions(query = query) ?: return@LaunchedEffect
 
@@ -77,7 +100,8 @@ fun SearchScreen(
                     name = it.formattedAddress ?: it.name,
                     title = it.name,
                     distanceMeters = it.distanceMeters,
-                    etaMinutes = it.etaMinutes
+                    etaMinutes = it.etaMinutes,
+                    it
                 )
             }
         }.onError { error ->
@@ -88,7 +112,9 @@ fun SearchScreen(
     SearchScreenImpl(
         navController,
         searchState,
-        suggestions
+        suggestions,
+        placeAutocomplete,
+        mapViewportState
     )
 }
 
@@ -97,55 +123,97 @@ data class SearchEntries(
     val title: String,
     val distanceMeters: Double?,
     val etaMinutes: Double?,
+    val suggestion: PlaceAutocompleteSuggestion?,
 )
 
 @Composable
-fun SearchScreenImpl(
+private fun SearchScreenImpl(
     navController: NavController,
     searchState: TextFieldState,
-    suggestions: List<SearchEntries>
+    suggestions: List<SearchEntries>,
+    placeAutocomplete: PlaceAutocomplete? = null,
+    mapViewportState: MapViewportState
 ) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val searchFocusRequester = remember { FocusRequester() }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        searchFocusRequester.requestFocus()
+        keyboardController?.show()
+    }
+
     Surface(
-        modifier = Modifier
-            .fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         color = Colors.background
     ) {
         Column(
-            Modifier
-                .systemBarsPadding()
+            Modifier.systemBarsPadding()
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 InputField(
                     state = searchState,
                     placeholder = "Search for a place",
-                    modifier = Modifier.weight(1f),
-                    backgroundColor = Color(0xFFF5F5F5),
+                    modifier = Modifier
+                        .weight(1f)
+                        .focusRequester(searchFocusRequester),
+                    backgroundColor = Color(0xFFE6E6E5),
                     leftContent = {
                         IconButton(
-                            onClick = { navController.popBackStack() },
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .size(40.dp),
+                            onClick = {
+                                focusManager.clearFocus()
+                                navController.popBackStack()
+                            }
                         ) {
                             Icon(
                                 imageVector = Tabler.Outline.ArrowLeft,
                                 contentDescription = "Back",
-                                tint = Colors.text
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp)
                             )
                         }
                     },
                     rightContent = {
                         if (searchState.text.isNotEmpty()) {
                             IconButton(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(40.dp),
                                 onClick = { searchState.edit { delete(0, length) } },
                             ) {
                                 Icon(
                                     imageVector = Tabler.Outline.X,
                                     contentDescription = "Clear search",
-                                    tint = Colors.text.copy(alpha = 0.5f),
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(8.dp)
+                                )
+                            }
+                        } else {
+                            IconButton(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(40.dp),
+                                onClick = {
+                                    // TODO: Open Profile
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Tabler.Outline.User,
+                                    contentDescription = "User profile",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(8.dp)
                                 )
                             }
                         }
@@ -177,7 +245,28 @@ fun SearchScreenImpl(
                         SearchSuggestionItem(
                             suggestion = suggestion,
                             onClick = {
-                                navController.navigate(AddLocationRoute(address = suggestion.name))
+                                val selectedSuggestion = suggestion.suggestion ?: return@SearchSuggestionItem
+
+                                coroutineScope.launch {
+                                    val response = placeAutocomplete?.select(selectedSuggestion) ?: return@launch
+
+                                    response.onValue { result ->
+                                        val coordinate = result.coordinate
+
+                                        mapViewportState.flyTo(
+                                            cameraOptions {
+                                                center(coordinate)
+                                                zoom(14.0)
+                                            }
+                                        )
+                                    }.onError { error ->
+                                        // Handle selection error here
+                                    }
+                                }
+                                
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                                navController.navigate(MainRoute)
                             }
                         )
                         HorizontalDivider(
