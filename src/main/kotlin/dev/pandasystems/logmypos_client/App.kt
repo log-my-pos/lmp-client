@@ -6,8 +6,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import dev.pandasystems.logmypos_client.screen.MainRoute
-import dev.pandasystems.logmypos_client.screen.MainScreen
+import dev.pandasystems.logmypos_client.screen.main.MainRoute
+import dev.pandasystems.logmypos_client.screen.main.MainScreen
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
 
 @Composable
@@ -19,7 +19,7 @@ fun App() {
 		val navController = rememberNavController()
 
 		NavHost(navController = navController, startDestination = MainRoute) {
-			composable<MainRoute> { MainScreen() }
+			composable<MainRoute> { MainScreen(navController) }
 		}
 	}
 }
