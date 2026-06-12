@@ -1,14 +1,18 @@
 package dev.pandasystems.logmypos_client
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.mapbox.geojson.Point
+import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.rememberMapState
 import com.mapbox.search.autocomplete.PlaceAutocomplete
@@ -44,23 +48,34 @@ fun App() {
 			PlaceAutocomplete.create(locationProvider = null)
 		}
 
-		NavHost(navController = navController, startDestination = MainRoute) {
-			composable<MainRoute> { MainScreen(navController, searchTextFieldState, mapState, mapViewportState) }
-			composable<SearchRoute> {
-				SearchScreen(
-					navController,
-					searchTextFieldState,
-					placeAutocomplete,
-					mapViewportState
-				)
-			}
-			composable<LocationDetailRoute> { backStackEntry ->
-				val route: LocationDetailRoute = backStackEntry.toRoute()
-				LocationDetailScreen(navController, route.name, route.description, route.address)
-			}
-			composable<AddLocationRoute> { backStackEntry ->
-				val route: AddLocationRoute = backStackEntry.toRoute()
-				AddLocationScreen(navController, route.address)
+		Surface(modifier = Modifier.fillMaxSize()) {
+			MapboxMap(
+				Modifier.fillMaxSize(),
+				mapState = mapState,
+				mapViewportState = mapViewportState,
+				scaleBar = {},
+				logo = {},
+				attribution = {},
+				compass = {},
+			)
+			NavHost(navController = navController, startDestination = MainRoute) {
+				composable<MainRoute> { MainScreen(navController, searchTextFieldState) }
+				composable<SearchRoute> {
+					SearchScreen(
+						navController,
+						searchTextFieldState,
+						placeAutocomplete,
+						mapViewportState
+					)
+				}
+				composable<LocationDetailRoute> { backStackEntry ->
+					val route: LocationDetailRoute = backStackEntry.toRoute()
+					LocationDetailScreen(navController, route.name, route.description, route.address)
+				}
+				composable<AddLocationRoute> { backStackEntry ->
+					val route: AddLocationRoute = backStackEntry.toRoute()
+					AddLocationScreen(navController, route.address)
+				}
 			}
 		}
 	}
