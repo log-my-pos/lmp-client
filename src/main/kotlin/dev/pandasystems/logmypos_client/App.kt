@@ -4,8 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,6 +13,7 @@ import androidx.navigation.toRoute
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.rememberMapState
 import com.mapbox.search.autocomplete.PlaceAutocomplete
 import dev.pandasystems.logmypos_client.screen.main.MainRoute
@@ -22,6 +22,7 @@ import dev.pandasystems.logmypos_client.screen.main.location.AddLocationRoute
 import dev.pandasystems.logmypos_client.screen.main.location.AddLocationScreen
 import dev.pandasystems.logmypos_client.screen.main.location.LocationDetailRoute
 import dev.pandasystems.logmypos_client.screen.main.location.LocationDetailScreen
+import dev.pandasystems.logmypos_client.models.search.SearchResult
 import dev.pandasystems.logmypos_client.screen.main.search.SearchRoute
 import dev.pandasystems.logmypos_client.screen.main.search.SearchScreen
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
@@ -43,10 +44,12 @@ fun App() {
 				bearing(0.0)
 			}
 		}
-
+		
 		val placeAutocomplete = remember {
 			PlaceAutocomplete.create(locationProvider = null)
 		}
+		
+		var selectedLocation by remember { mutableStateOf<SearchResult?>(null) }
 
 		Surface(modifier = Modifier.fillMaxSize()) {
 			MapboxMap(
@@ -57,16 +60,25 @@ fun App() {
 				logo = {},
 				attribution = {},
 				compass = {},
+				content = {
+					if (selectedLocation != null) {
+						PointAnnotation(point = selectedLocation?.coordinate!!)
+					}
+				}
 			)
+			
 			NavHost(navController = navController, startDestination = MainRoute) {
-				composable<MainRoute> { MainScreen(navController, searchTextFieldState) }
-				composable<SearchRoute> {
-					SearchScreen(
+				composable<MainRoute> {
+					MainScreen(
 						navController,
 						searchTextFieldState,
-						placeAutocomplete,
-						mapViewportState
+						mapViewportState,
+						selectedLocation,
+						{ selectedLocation = null }
 					)
+				}
+				composable<SearchRoute> {
+					SearchScreen(navController, searchTextFieldState, placeAutocomplete) { result -> selectedLocation = result }
 				}
 				composable<LocationDetailRoute> { backStackEntry ->
 					val route: LocationDetailRoute = backStackEntry.toRoute()
