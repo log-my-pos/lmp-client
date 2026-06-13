@@ -30,70 +30,72 @@ object MainRoute
 @Preview
 @Composable
 private fun PreviewComposite() {
-    MainScreen(
-        rememberNavController(),
-        rememberTextFieldState()
-    )
+	MainScreen(
+		rememberNavController(),
+		rememberTextFieldState()
+	)
 }
 
 @Composable
 fun MainScreen(
-    rootNavController: NavController,
-    searchState: TextFieldState
+	rootNavController: NavController,
+	searchState: TextFieldState
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        InputField(
-            state = searchState,
-            placeholder = "Search for a place",
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .systemBarsPadding()
-                .onFocusChanged {
-                    if (it.isFocused)
-                        rootNavController.navigate(SearchRoute)
-                }
-                .dropShadow(
-                    CircleShape,
-                    Shadow(
-                        radius = 8.dp,
-                        color = Colors.shadow
-                    )
-                ),
-            backgroundColor = Colors.background,
-            leftContent = {
-                Box(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(40.dp),
-                ) {
-                    Icon(
-                        imageVector = Tabler.Outline.Search,
-                        contentDescription = "Search icon",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp)
-                    )
-                }
-            },
-            rightContent = {
-                IconButton(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .size(40.dp),
-                    onClick = {
-                        // TODO: Open Profile
-                    }, colors = IconButtonDefaults.iconButtonColors(contentColor = Colors.text)
-                ) {
-                    Icon(
-                        imageVector = Tabler.Outline.User,
-                        contentDescription = "User profile",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp)
-                    )
-                }
-            }
-        )
-    }
+	Box(
+		modifier = Modifier
+			.fillMaxSize()
+			.systemBarsPadding()
+	) {
+		InputField(
+			state = searchState,
+			placeholder = "Search for a place",
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(16.dp)
+				.onFocusChanged {
+					if (it.isFocused) rootNavController.navigate(SearchRoute)
+				}
+				.dropShadow(
+					CircleShape,
+					Shadow(
+						radius = 8.dp,
+						color = Colors.shadow
+					)
+				),
+			backgroundColor = Colors.background,
+			leftContent = {
+				Box(
+					modifier = Modifier
+						.padding(4.dp)
+						.size(36.dp),
+				) {
+					Icon(
+						imageVector = Tabler.Outline.Search,
+						contentDescription = "Search icon",
+						modifier = Modifier
+							.fillMaxSize()
+							.padding(6.dp)
+					)
+				}
+			},
+			rightContent = {
+				IconButton(
+					modifier = Modifier
+						.padding(4.dp)
+						.size(36.dp),
+					onClick = {
+						// TODO: Open Profile
+					}, colors = IconButtonDefaults.iconButtonColors(contentColor = Colors.text)
+				) {
+					Icon(
+						imageVector = Tabler.Outline.User,
+						contentDescription = "User profile",
+						modifier = Modifier
+							.fillMaxSize()
+							.padding(6.dp)
+					)
+				}
+			}
+		)
+	}
 }

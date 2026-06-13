@@ -37,8 +37,8 @@ private fun PreviewComposite() {
 			leftContent = {
 				IconButton(
 					modifier = Modifier
-						.padding(8.dp)
-						.size(40.dp),
+						.padding(4.dp)
+						.size(36.dp),
 					onClick = {},
 					colors = IconButtonDefaults.iconButtonColors(
 						contentColor = Colors.text,
@@ -50,15 +50,15 @@ private fun PreviewComposite() {
 						contentDescription = "Search",
 						modifier = Modifier
 							.fillMaxSize()
-							.padding(8.dp)
+							.padding(6.dp)
 					)
 				}
 			},
 			rightContent = {
 				IconButton(
 					modifier = Modifier
-						.padding(8.dp)
-						.size(40.dp),
+						.padding(4.dp)
+						.size(36.dp),
 					onClick = {
 						// TODO: Open Profile
 					},
@@ -69,7 +69,7 @@ private fun PreviewComposite() {
 						contentDescription = "User profile",
 						modifier = Modifier
 							.fillMaxSize()
-							.padding(8.dp)
+							.padding(6.dp)
 					)
 				}
 			}

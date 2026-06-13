@@ -46,28 +46,28 @@ import kotlin.math.roundToInt
 @Preview
 @Composable
 private fun SearchScreenPreview() {
-    SearchScreenImpl(
-        rememberNavController(),
-        rememberTextFieldState("Hello World"),
-        listOf(
-            SearchEntries(
-                "123 Main St, London, UK",
-                "Main St",
-                1340.0,
-                120.0,
-                null
-            ),
-            SearchEntries(
-                "456 High St, Manchester, UK",
-                "High St",
-                120320.0,
-                1000.0,
-                null
-            ),
-        ),
-        null,
-        rememberMapViewportState()
-    )
+	SearchScreenImpl(
+		rememberNavController(),
+		rememberTextFieldState("Hello World"),
+		listOf(
+			SearchEntries(
+				"123 Main St, London, UK",
+				"Main St",
+				1340.0,
+				120.0,
+				null
+			),
+			SearchEntries(
+				"456 High St, Manchester, UK",
+				"High St",
+				120320.0,
+				1000.0,
+				null
+			),
+		),
+		null,
+		rememberMapViewportState()
+	)
 }
 
 @Serializable
@@ -76,286 +76,280 @@ object SearchRoute
 @OptIn(FlowPreview::class)
 @Composable
 fun SearchScreen(
-    navController: NavController,
-    searchState: TextFieldState,
-    placeAutocomplete: PlaceAutocomplete? = null,
-    mapViewportState: MapViewportState,
+	navController: NavController,
+	searchState: TextFieldState,
+	placeAutocomplete: PlaceAutocomplete? = null,
+	mapViewportState: MapViewportState,
 ) {
-    var suggestions by remember {
-        mutableStateOf<List<SearchEntries>>(emptyList())
-    }
+	var suggestions by remember {
+		mutableStateOf<List<SearchEntries>>(emptyList())
+	}
 
-    LaunchedEffect(searchState.text.toString()) {
-        val query = searchState.text.toString().trim()
-        if (query.isBlank()) {
-            suggestions = emptyList()
-            return@LaunchedEffect
-        }
+	LaunchedEffect(searchState.text.toString()) {
+		val query = searchState.text.toString().trim()
+		if (query.isBlank()) {
+			suggestions = emptyList()
+			return@LaunchedEffect
+		}
 
-        val response = placeAutocomplete?.suggestions(query = query) ?: return@LaunchedEffect
+		val response = placeAutocomplete?.suggestions(query = query) ?: return@LaunchedEffect
 
-        response.onValue { results ->
-            suggestions = results.map {
-                SearchEntries(
-                    name = it.formattedAddress ?: it.name,
-                    title = it.name,
-                    distanceMeters = it.distanceMeters,
-                    etaMinutes = it.etaMinutes,
-                    it
-                )
-            }
-        }.onError { error ->
-            suggestions = emptyList()
-        }
-    }
+		response.onValue { results ->
+			suggestions = results.map {
+				SearchEntries(
+					name = it.formattedAddress ?: it.name,
+					title = it.name,
+					distanceMeters = it.distanceMeters,
+					etaMinutes = it.etaMinutes,
+					it
+				)
+			}
+		}.onError { error ->
+			suggestions = emptyList()
+		}
+	}
 
-    SearchScreenImpl(
-        navController,
-        searchState,
-        suggestions,
-        placeAutocomplete,
-        mapViewportState
-    )
+	SearchScreenImpl(
+		navController,
+		searchState,
+		suggestions,
+		placeAutocomplete,
+		mapViewportState
+	)
 }
 
 data class SearchEntries(
-    val name: String,
-    val title: String,
-    val distanceMeters: Double?,
-    val etaMinutes: Double?,
-    val suggestion: PlaceAutocompleteSuggestion?,
+	val name: String,
+	val title: String,
+	val distanceMeters: Double?,
+	val etaMinutes: Double?,
+	val suggestion: PlaceAutocompleteSuggestion?,
 )
 
 @Composable
 private fun SearchScreenImpl(
-    navController: NavController,
-    searchState: TextFieldState,
-    suggestions: List<SearchEntries>,
-    placeAutocomplete: PlaceAutocomplete? = null,
-    mapViewportState: MapViewportState
+	navController: NavController,
+	searchState: TextFieldState,
+	suggestions: List<SearchEntries>,
+	placeAutocomplete: PlaceAutocomplete? = null,
+	mapViewportState: MapViewportState
 ) {
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val searchFocusRequester = remember { FocusRequester() }
-    val coroutineScope = rememberCoroutineScope()
+	val focusManager = LocalFocusManager.current
+	val keyboardController = LocalSoftwareKeyboardController.current
+	val searchFocusRequester = remember { FocusRequester() }
+	val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        searchFocusRequester.requestFocus()
-        keyboardController?.show()
-    }
+	LaunchedEffect(Unit) {
+		searchFocusRequester.requestFocus()
+		keyboardController?.show()
+	}
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Colors.background
-    ) {
-        Column(
-            Modifier.systemBarsPadding()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                InputField(
-                    state = searchState,
-                    placeholder = "Search for a place",
-                    modifier = Modifier
-                        .weight(1f)
-                        .focusRequester(searchFocusRequester),
-                    backgroundColor = Color(0xFFE6E6E5),
-                    leftContent = {
-                        IconButton(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .size(40.dp),
-                            onClick = {
-                                focusManager.clearFocus()
-                                navController.popBackStack()
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Tabler.Outline.ArrowLeft,
-                                contentDescription = "Back",
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(8.dp)
-                            )
-                        }
-                    },
-                    rightContent = {
-                        if (searchState.text.isNotEmpty()) {
-                            IconButton(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .size(40.dp),
-                                onClick = { searchState.edit { delete(0, length) } },
-                            ) {
-                                Icon(
-                                    imageVector = Tabler.Outline.X,
-                                    contentDescription = "Clear search",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(8.dp)
-                                )
-                            }
-                        } else {
-                            IconButton(
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .size(40.dp),
-                                onClick = {
-                                    // TODO: Open Profile
-                                },
-                            ) {
-                                Icon(
-                                    imageVector = Tabler.Outline.User,
-                                    contentDescription = "User profile",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(8.dp)
-                                )
-                            }
-                        }
-                    }
-                )
-            }
+	Surface(
+		modifier = Modifier.fillMaxSize(),
+		color = Colors.background
+	) {
+		Column(
+			Modifier.systemBarsPadding()
+		) {
+			InputField(
+				state = searchState,
+				placeholder = "Search for a place",
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(16.dp)
+					.focusRequester(searchFocusRequester),
+				backgroundColor = Color(0xFFE6E6E5),
+				leftContent = {
+					IconButton(
+						modifier = Modifier
+							.padding(4.dp)
+							.size(36.dp),
+						onClick = {
+							focusManager.clearFocus()
+							navController.popBackStack()
+						}
+					) {
+						Icon(
+							imageVector = Tabler.Outline.ArrowLeft,
+							contentDescription = "Back",
+							modifier = Modifier
+								.fillMaxSize()
+								.padding(6.dp)
+						)
+					}
+				},
+				rightContent = {
+					if (searchState.text.isNotEmpty()) {
+						IconButton(
+							modifier = Modifier
+								.padding(4.dp)
+								.size(36.dp),
+							onClick = { searchState.edit { delete(0, length) } },
+						) {
+							Icon(
+								imageVector = Tabler.Outline.X,
+								contentDescription = "Clear search",
+								modifier = Modifier
+									.fillMaxSize()
+									.padding(6.dp)
+							)
+						}
+					} else {
+						IconButton(
+							modifier = Modifier
+								.padding(8.dp)
+								.size(40.dp),
+							onClick = {
+								// TODO: Open Profile
+							},
+						) {
+							Icon(
+								imageVector = Tabler.Outline.User,
+								contentDescription = "User profile",
+								modifier = Modifier
+									.fillMaxSize()
+									.padding(8.dp)
+							)
+						}
+					}
+				}
+			)
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                if (suggestions.isEmpty() && searchState.text.isNotBlank()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "No results found for \"${searchState.text}\"",
-                                color = Colors.text.copy(alpha = 0.5f),
-                                fontSize = 16.sp
-                            )
-                        }
-                    }
-                } else {
-                    items(suggestions) { suggestion ->
-                        SearchSuggestionItem(
-                            suggestion = suggestion,
-                            onClick = {
-                                val selectedSuggestion = suggestion.suggestion ?: return@SearchSuggestionItem
+			LazyColumn(
+				modifier = Modifier.fillMaxSize(),
+				contentPadding = PaddingValues(bottom = 16.dp)
+			) {
+				if (suggestions.isEmpty() && searchState.text.isNotBlank()) {
+					item {
+						Box(
+							modifier = Modifier
+								.fillMaxWidth()
+								.padding(32.dp),
+							contentAlignment = Alignment.Center
+						) {
+							Text(
+								text = "No results found for \"${searchState.text}\"",
+								color = Colors.text.copy(alpha = 0.5f),
+								fontSize = 16.sp
+							)
+						}
+					}
+				} else {
+					items(suggestions) { suggestion ->
+						SearchSuggestionItem(
+							suggestion = suggestion,
+							onClick = {
+								val selectedSuggestion = suggestion.suggestion ?: return@SearchSuggestionItem
 
-                                coroutineScope.launch {
-                                    val response = placeAutocomplete?.select(selectedSuggestion) ?: return@launch
+								coroutineScope.launch {
+									val response = placeAutocomplete?.select(selectedSuggestion) ?: return@launch
 
-                                    response.onValue { result ->
-                                        val coordinate = result.coordinate
+									response.onValue { result ->
+										val coordinate = result.coordinate
 
-                                        mapViewportState.flyTo(
-                                            cameraOptions {
-                                                center(coordinate)
-                                                zoom(14.0)
-                                            }
-                                        )
-                                    }.onError { error ->
-                                        // Handle selection error here
-                                    }
-                                }
-                                
-                                focusManager.clearFocus()
-                                keyboardController?.hide()
-                                navController.navigate(MainRoute)
-                            }
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            thickness = 0.5.dp,
-                            color = Color.LightGray.copy(alpha = 0.5f)
-                        )
-                    }
-                }
-            }
-        }
-    }
+										mapViewportState.flyTo(
+											cameraOptions {
+												center(coordinate)
+												zoom(14.0)
+											}
+										)
+									}.onError { error ->
+										// Handle selection error here
+									}
+								}
+
+								focusManager.clearFocus()
+								keyboardController?.hide()
+								navController.navigate(MainRoute)
+							}
+						)
+						HorizontalDivider(
+							modifier = Modifier.padding(horizontal = 16.dp),
+							thickness = 0.5.dp,
+							color = Color.LightGray.copy(alpha = 0.5f)
+						)
+					}
+				}
+			}
+		}
+	}
 }
 
 @Composable
 private fun SearchSuggestionItem(
-    suggestion: SearchEntries,
-    onClick: () -> Unit
+	suggestion: SearchEntries,
+	onClick: () -> Unit
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.Transparent
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(Color(0xFFF0F0F0), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Tabler.Outline.MapPin,
-                    contentDescription = null,
-                    tint = Colors.text,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+	Surface(
+		onClick = onClick,
+		modifier = Modifier.fillMaxWidth(),
+		color = Color.Transparent
+	) {
+		Row(
+			modifier = Modifier
+				.padding(16.dp),
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			Box(
+				modifier = Modifier
+					.size(40.dp)
+					.background(Color(0xFFF0F0F0), CircleShape),
+				contentAlignment = Alignment.Center
+			) {
+				Icon(
+					imageVector = Tabler.Outline.MapPin,
+					contentDescription = null,
+					tint = Colors.text,
+					modifier = Modifier.size(20.dp)
+				)
+			}
 
-            Spacer(modifier = Modifier.width(16.dp))
+			Spacer(modifier = Modifier.width(16.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = suggestion.title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Colors.text,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = suggestion.name,
-                    fontSize = 14.sp,
-                    color = Colors.text.copy(alpha = 0.6f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+			Column(modifier = Modifier.weight(1f)) {
+				Text(
+					text = suggestion.title,
+					fontSize = 16.sp,
+					fontWeight = FontWeight.SemiBold,
+					color = Colors.text,
+					maxLines = 1,
+					overflow = TextOverflow.Ellipsis
+				)
+				Text(
+					text = suggestion.name,
+					fontSize = 14.sp,
+					color = Colors.text.copy(alpha = 0.6f),
+					maxLines = 1,
+					overflow = TextOverflow.Ellipsis
+				)
+			}
 
-            if (suggestion.distanceMeters != null) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = formatDistanceKm(suggestion.distanceMeters),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Colors.text
-                    )
-                    Text(
-                        text = "km",
-                        fontSize = 12.sp,
-                        color = Colors.text.copy(alpha = 0.5f)
-                    )
-                }
-            }
-        }
-    }
+			if (suggestion.distanceMeters != null) {
+				Spacer(modifier = Modifier.width(8.dp))
+				Column(horizontalAlignment = Alignment.End) {
+					Text(
+						text = formatDistanceKm(suggestion.distanceMeters),
+						fontSize = 14.sp,
+						fontWeight = FontWeight.Bold,
+						color = Colors.text
+					)
+					Text(
+						text = "km",
+						fontSize = 12.sp,
+						color = Colors.text.copy(alpha = 0.5f)
+					)
+				}
+			}
+		}
+	}
 }
 
 private fun formatDistanceKm(distanceMeters: Double): String {
-    val km = distanceMeters / 1000.0
+	val km = distanceMeters / 1000.0
 
-    return when {
-        km > 99 -> "99+"
-        km < 10 -> String.format(Locale.UK, "%.1f", km).trimEnd('0').trimEnd('.')
-        else -> km.roundToInt().toString()
-    }
+	return when {
+		km > 99 -> "99+"
+		km < 10 -> String.format(Locale.UK, "%.1f", km).trimEnd('0').trimEnd('.')
+		else -> km.roundToInt().toString()
+	}
 }
