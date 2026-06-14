@@ -35,6 +35,7 @@ import dev.pandasystems.logmypos_client.models.location.LocationSearch
 import dev.pandasystems.logmypos_client.screen.main.MainRoute
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
+import dev.pandasystems.logmypos_client.utils.SetupPreview
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -44,7 +45,7 @@ import kotlin.math.roundToInt
 
 @Preview
 @Composable
-private fun SearchScreenPreview() {
+private fun SearchScreenPreview() = SetupPreview {
 	SearchScreen(
 		rememberNavController(),
 		rememberTextFieldState("Hello World"),
@@ -89,7 +90,7 @@ fun SearchScreen(
 
 	LaunchedEffect(searchState.text.toString()) {
 		if (isPreview) return@LaunchedEffect
-		
+
 		val query = searchState.text.toString().trim()
 		if (query.isBlank()) {
 			suggestions = emptyList()
@@ -175,11 +176,13 @@ fun SearchScreen(
 						SearchSuggestionItem(
 							suggestion = suggestion,
 							onClick = {
-								coroutineScope.launch { locationService.selectedLocation = suggestion.resolve() }
-								navController.navigate(MainRoute)
-								focusManager.clearFocus()
-								keyboardController?.hide()
-								searchState.clearText()
+								coroutineScope.launch {
+									locationService.selectedLocation = suggestion.resolve()
+									navController.navigate(MainRoute)
+									focusManager.clearFocus()
+									keyboardController?.hide()
+									searchState.clearText()
+								}
 							}
 						)
 						HorizontalDivider(

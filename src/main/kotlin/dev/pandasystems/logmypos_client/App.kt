@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -18,8 +19,11 @@ import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationState
+import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.compose.rememberMapState
+import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.extension.compose.style.standard.MapboxStandardStyle
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotation
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.screen.location.AddLocationRoute
 import dev.pandasystems.logmypos_client.screen.location.AddLocationScreen
@@ -70,11 +74,20 @@ fun App() {
 				logo = {},
 				attribution = {},
 				compass = {},
-				style = { MapboxStandardStyle() },
+				style = { MapStyle(style = "mapbox://styles/julianmaggio/cmoijn6tp002201sfdm0nab23") },
 				content = {
+					val markerResourceId = R.drawable.preview_image
+					val marker = rememberIconImage(key = markerResourceId, painter = painterResource(markerResourceId))
 					val selectedLocation = locationService.selectedLocation
 					if (selectedLocation != null) {
-						PointAnnotation(point = selectedLocation.coordinate)
+						PointAnnotation(
+							point = selectedLocation.coordinate,
+							pointAnnotationState = remember {
+								PointAnnotationState().apply {
+									iconImage = marker
+								}
+							}
+						)
 					}
 
 					entries.forEach { entry ->
@@ -82,6 +95,7 @@ fun App() {
 							point = Point.fromLngLat(entry.longitude, entry.latitude),
 							pointAnnotationState = remember {
 								PointAnnotationState().apply {
+									iconImage = marker
 									interactionsState.onClicked {
 										navController.navigate(
 											LocationDetailRoute(
