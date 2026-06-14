@@ -11,17 +11,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.Camera
@@ -29,9 +33,19 @@ import com.composables.icons.tabler.outline.MapPin
 import com.mapbox.geojson.Point
 import com.mapbox.search.autocomplete.PlaceAutocomplete
 import dev.pandasystems.logmypos_client.components.InputField
+import dev.pandasystems.logmypos_client.data.JournalEntry
 import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
 import dev.pandasystems.logmypos_client.models.search.toSearchSuggestion
+import dev.pandasystems.logmypos_client.repository.JournalRepository
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import java.io.File
+import java.io.FileOutputStream
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import kotlin.time.Clock
 
 @Preview
 @Composable
@@ -59,8 +73,17 @@ fun AddLocationScreen(
 	placeAutocomplete: PlaceAutocomplete?,
 	titleState: TextFieldState,
 	descriptionState: TextFieldState,
+	repository: JournalRepository? = null,
 ) {
 	var location by remember { mutableStateOf<SearchSuggestion?>(null) }
+	var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+	val context = LocalContext.current
+	val scope = rememberCoroutineScope()
+
+	val photoPickerLauncher = rememberLauncherForActivityResult(
+		contract = ActivityResultContracts.PickVisualMedia(),
+		onResult = { uri -> selectedImageUri = uri }
+	)
 
 	LaunchedEffect(Unit) {
 		val response =
@@ -102,17 +125,31 @@ fun AddLocationScreen(
 					.fillMaxWidth()
 					.height(200.dp)
 					.clip(RoundedCornerShape(16.dp))
-					.background(Color.LightGray),
+					.background(Color(0xFFF0F0F0))
+					.clickable {
+						photoPickerLauncher.launch(
+							PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+						)
+					},
 				contentAlignment = Alignment.Center
 			) {
-				Column(horizontalAlignment = Alignment.CenterHorizontally) {
-					Icon(
-						imageVector = Tabler.Outline.Camera,
-						contentDescription = null,
-						modifier = Modifier.size(48.dp),
-						tint = Color.Gray
+				if (selectedImageUri != null) {
+					AsyncImage(
+						model = selectedImageUri,
+						contentDescription = "Selected image",
+						modifier = Modifier.fillMaxSize(),
+						contentScale = ContentScale.Crop
 					)
-					Text("Add Photo", color = Color.Gray)
+				} else {
+					Column(horizontalAlignment = Alignment.CenterHorizontally) {
+						Icon(
+							imageVector = Tabler.Outline.Camera,
+							contentDescription = null,
+							modifier = Modifier.size(48.dp),
+							tint = Color.Gray
+						)
+						Text("Add Photo", color = Color.Gray)
+					}
 				}
 			}
 
@@ -172,8 +209,24 @@ fun AddLocationScreen(
 
 			Button(
 				onClick = {
-					// TODO: Save the entry
-					navController.popBackStack()
+					scope.launch {
+						val imagePath = selectedImageUri?.let { uri ->
+							saveImageToInternalStorage(context, uri)
+						}
+
+						val entry = JournalEntry(
+							title = titleState.text.toString(),
+							description = descriptionState.text.toString(),
+							latitude = route.latitude,
+							longitude = route.longitude,
+							address = location?.formattedAddress ?: location?.address,
+							date = Clock.System.now().toEpochMilliseconds(),
+							imagePath = imagePath
+						)
+
+						repository?.insert(entry)
+						navController.popBackStack()
+					}
 				},
 				modifier = Modifier.fillMaxWidth(),
 				shape = RoundedCornerShape(12.dp),
@@ -182,5 +235,23 @@ fun AddLocationScreen(
 				Text("Save Entry", fontSize = 18.sp)
 			}
 		}
+	}
+}
+
+private fun saveImageToInternalStorage(context: android.content.Context, uri: android.net.Uri): String? {
+	return try {
+		val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+		val fileName = "image_${System.currentTimeMillis()}.jpg"
+		val file = File(context.filesDir, fileName)
+		val outputStream = FileOutputStream(file)
+		inputStream.use { input ->
+			outputStream.use { output ->
+				input.copyTo(output)
+			}
+		}
+		file.absolutePath
+	} catch (e: Exception) {
+		e.printStackTrace()
+		null
 	}
 }

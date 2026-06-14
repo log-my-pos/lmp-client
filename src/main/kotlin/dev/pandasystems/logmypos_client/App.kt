@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -27,6 +28,9 @@ import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
 import dev.pandasystems.logmypos_client.screen.main.search.SearchRoute
 import dev.pandasystems.logmypos_client.screen.main.search.SearchScreen
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
+import dev.pandasystems.logmypos_client.data.AppDatabase
+import dev.pandasystems.logmypos_client.repository.JournalRepository
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun App() {
@@ -49,6 +53,11 @@ fun App() {
 		val placeAutocomplete = remember {
 			PlaceAutocomplete.create(locationProvider = null)
 		}
+
+		val context = LocalContext.current
+		val database = remember { AppDatabase.getDatabase(context) }
+		val repository = remember { JournalRepository(database.journalEntryDao()) }
+		val entries by repository.allEntries.collectAsState(emptyList())
 		
 		var selectedLocation by remember { mutableStateOf<SearchSuggestion?>(null) }
 
@@ -64,6 +73,23 @@ fun App() {
 				content = {
 					if (selectedLocation?.coordinate != null) {
 						PointAnnotation(point = selectedLocation!!.coordinate!!)
+					}
+
+					entries.forEach { entry ->
+						PointAnnotation(
+							point = Point.fromLngLat(entry.longitude, entry.latitude),
+							onClick = {
+								navController.navigate(
+									LocationDetailRoute(
+										name = entry.title,
+										description = entry.description,
+										address = entry.address ?: "",
+										imagePath = entry.imagePath
+									)
+								)
+								true
+							}
+						)
 					}
 				}
 			)
@@ -83,11 +109,18 @@ fun App() {
 				}
 				composable<LocationDetailRoute> { backStackEntry ->
 					val route: LocationDetailRoute = backStackEntry.toRoute()
-					LocationDetailScreen(navController, route.name, route.description, route.address)
+					LocationDetailScreen(navController, route.name, route.description, route.address, route.imagePath)
 				}
 				composable<AddLocationRoute> { backStackEntry ->
 					val route: AddLocationRoute = backStackEntry.toRoute()
-					AddLocationScreen(route, navController, placeAutocomplete, rememberTextFieldState(), rememberTextFieldState())
+					AddLocationScreen(
+						route,
+						navController,
+						placeAutocomplete,
+						rememberTextFieldState(),
+						rememberTextFieldState(),
+						repository
+					)
 				}
 			}
 		}

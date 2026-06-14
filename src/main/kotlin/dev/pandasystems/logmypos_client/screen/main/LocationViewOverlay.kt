@@ -52,7 +52,7 @@ fun LocationViewOverlay(
 	navController: NavController,
 	mapViewportState: MapViewportState
 ) {
-	val (name, address, distanceMeters, etaMinutes, coordinate) = location
+	val (name, address, distanceMeters, etaMinutes) = location
 
 	LaunchedEffect(Unit) {
 		mapViewportState.flyTo(cameraOptions {

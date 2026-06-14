@@ -8,7 +8,6 @@ data class SearchSuggestion(
 	val formattedAddress: String?,
 	val distanceMeters: Double?,
 	val etaMinutes: Double?,
-	val coordinate: Point?
 ) {
 	companion object {
 		val PREVIEW = SearchSuggestion(
@@ -16,7 +15,6 @@ data class SearchSuggestion(
 			formattedAddress = "123 Main St, London, UK",
 			distanceMeters = 0.0,
 			etaMinutes = 0.0,
-			coordinate = Point.fromLngLat(0.0, 0.0)
 		)
 	}
 }
@@ -26,7 +24,6 @@ fun PlaceAutocompleteSuggestion.toSearchSuggestion(): SearchSuggestion {
 		address = this.name,
 		formattedAddress = this.formattedAddress,
 		distanceMeters = this.distanceMeters,
-		etaMinutes = this.etaMinutes,
-		coordinate = this.coordinate
+		etaMinutes = this.etaMinutes
 	)
 }
