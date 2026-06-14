@@ -36,7 +36,6 @@ import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
 import dev.pandasystems.logmypos_client.models.search.SearchResult
 import dev.pandasystems.logmypos_client.models.search.toSearchResult
 import dev.pandasystems.logmypos_client.models.search.toSearchSuggestion
-import dev.pandasystems.logmypos_client.models.toAddress
 import dev.pandasystems.logmypos_client.screen.main.MainRoute
 import dev.pandasystems.logmypos_client.theme.Colors
 import kotlinx.coroutines.FlowPreview
@@ -65,7 +64,7 @@ fun SearchScreen(
 	navController: NavController,
 	searchState: TextFieldState,
 	placeAutocomplete: PlaceAutocomplete?,
-	onNewSelection: (SearchResult) -> Unit
+	onNewSelection: (SearchSuggestion) -> Unit
 ) {
 	val isPreview = LocalInspectionMode.current
 	val focusManager = LocalFocusManager.current
@@ -80,14 +79,14 @@ fun SearchScreen(
 			else
 				listOf(
 					SearchSuggestion.PREVIEW.copy(
-						title = "123 Main St, London, UK",
-						addressName = "Main St",
+						address = "123 Main St, London, UK",
+						formattedAddress = "Main St",
 						distanceMeters = 1340.0,
 						etaMinutes = 120.0,
 					),
 					SearchSuggestion.PREVIEW.copy(
-						title = "456 High St, Manchester, UK",
-						addressName = "High St",
+						address = "456 High St, Manchester, UK",
+						formattedAddress = "High St",
 						distanceMeters = 120320.0,
 						etaMinutes = 1000.0,
 					),
@@ -111,20 +110,7 @@ fun SearchScreen(
 
 		suggestionResponse.onValue { results ->
 			suggestions = results.map { suggestion ->
-				suggestion.toSearchSuggestion {
-					if (isPreview)
-						return@toSearchSuggestion SearchResult.PREVIEW
-
-					val selectResponse = placeAutocomplete.select(suggestion)
-
-					var searchResult: SearchResult? = null
-					selectResponse.onValue { result ->
-						searchResult = result.toSearchResult()
-					}.onError { error ->
-						// Handle selection error here
-					}
-					return@toSearchSuggestion requireNotNull(searchResult)
-				}
+				suggestion.toSearchSuggestion()
 			}
 		}.onError { error ->
 			suggestions = emptyList()
@@ -208,7 +194,7 @@ fun SearchScreen(
 							suggestion = suggestion,
 							onClick = {
 								coroutineScope.launch {
-									onNewSelection(suggestion.getResult())
+									onNewSelection(suggestion)
 								}
 								navController.navigate(MainRoute)
 								focusManager.clearFocus()
@@ -261,16 +247,16 @@ private fun SearchSuggestionItem(
 
 			Column(modifier = Modifier.weight(1f)) {
 				Text(
-					text = suggestion.title,
+					text = suggestion.address,
 					fontSize = 16.sp,
 					fontWeight = FontWeight.SemiBold,
 					color = Colors.text,
 					maxLines = 1,
 					overflow = TextOverflow.Ellipsis
 				)
-				if (suggestion.addressName != null) {
+				if (suggestion.formattedAddress != null) {
 					Text(
-						text = suggestion.addressName,
+						text = suggestion.formattedAddress,
 						fontSize = 14.sp,
 						color = Colors.text.copy(alpha = 0.6f),
 						maxLines = 1,

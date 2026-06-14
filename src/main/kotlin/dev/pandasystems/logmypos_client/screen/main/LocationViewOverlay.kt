@@ -28,6 +28,8 @@ import com.mapbox.maps.dsl.cameraOptions
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import dev.pandasystems.logmypos_client.models.search.SearchResult
+import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
+import dev.pandasystems.logmypos_client.screen.main.location.AddLocationRoute
 import dev.pandasystems.logmypos_client.theme.Colors
 
 @Preview
@@ -36,7 +38,7 @@ private fun LocationViewOverlayPreview() {
 	Box(Modifier.fillMaxSize()) {
 		Box(Modifier.align(Alignment.BottomCenter)) {
 			LocationViewOverlay(
-				location = SearchResult.PREVIEW,
+				location = SearchSuggestion.PREVIEW,
 				navController = rememberNavController(),
 				mapViewportState = rememberMapViewportState()
 			)
@@ -46,15 +48,15 @@ private fun LocationViewOverlayPreview() {
 
 @Composable
 fun LocationViewOverlay(
-	location: SearchResult,
+	location: SearchSuggestion,
 	navController: NavController,
 	mapViewportState: MapViewportState
 ) {
-	val (name, address, coordinates) = location
+	val (name, address, distanceMeters, etaMinutes, coordinate) = location
 
 	LaunchedEffect(Unit) {
 		mapViewportState.flyTo(cameraOptions {
-			center(coordinates)
+			center(coordinate)
 			zoom(14.0)
 		})
 	}
@@ -104,7 +106,7 @@ fun LocationViewOverlay(
 						fontWeight = FontWeight.Medium
 					)
 					Text(
-						text = address?.formattedAddress ?: name,
+						text = address ?: name,
 						fontSize = 16.sp,
 						color = Colors.text,
 						fontWeight = FontWeight.SemiBold,
@@ -122,14 +124,14 @@ fun LocationViewOverlay(
 						imageVector = Tabler.Outline.X,
 						contentDescription = "Clear selection",
 						modifier = Modifier.size(20.dp),
-						tint = Colors.text.copy(alpha = 0.4f)
 					)
 				}
 			}
 
 			Button(
 				onClick = {
-//						navController.navigate(AddLocationRoute(address = selectedAddress ?: ""))
+					val coordinate = location.coordinate ?: return@Button
+					navController.navigate(AddLocationRoute(coordinate.longitude(), coordinate.latitude()))
 				},
 				modifier = Modifier.fillMaxWidth(),
 				shape = RoundedCornerShape(12.dp),

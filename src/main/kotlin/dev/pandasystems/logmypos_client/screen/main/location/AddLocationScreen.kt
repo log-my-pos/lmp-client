@@ -7,6 +7,11 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,126 +26,161 @@ import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.Camera
 import com.composables.icons.tabler.outline.MapPin
+import com.mapbox.geojson.Point
+import com.mapbox.search.autocomplete.PlaceAutocomplete
 import dev.pandasystems.logmypos_client.components.InputField
+import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
+import dev.pandasystems.logmypos_client.models.search.toSearchSuggestion
 import kotlinx.serialization.Serializable
 
 @Preview
 @Composable
 private fun PreviewAddLocationScreen() {
-    AddLocationScreen(
-        navController = rememberNavController(),
-        address = "123 Main St"
-    )
+	AddLocationScreen(
+		route = AddLocationRoute(latitude = 0.0, longitude = 0.0),
+		navController = rememberNavController(),
+		placeAutocomplete = null,
+		titleState = rememberTextFieldState(),
+		descriptionState = rememberTextFieldState(),
+	)
 }
 
 @Serializable
-data class AddLocationRoute(val address: String)
+data class AddLocationRoute(
+	val longitude: Double,
+	val latitude: Double,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddLocationScreen(
-    navController: NavController,
-    address: String,
-    titleState: TextFieldState = rememberTextFieldState(),
-    descriptionState: TextFieldState = rememberTextFieldState()
+	route: AddLocationRoute,
+	navController: NavController,
+	placeAutocomplete: PlaceAutocomplete?,
+	titleState: TextFieldState,
+	descriptionState: TextFieldState,
 ) {
-    Scaffold(
-        topBar = {
-            OptIn(ExperimentalMaterial3Api::class)
-            TopAppBar(
-                title = { Text("Add Entry") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Tabler.Outline.ArrowLeft, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Photo Picker Placeholder
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.LightGray),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Tabler.Outline.Camera,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = Color.Gray
-                    )
-                    Text("Add Photo", color = Color.Gray)
-                }
-            }
+	var location by remember { mutableStateOf<SearchSuggestion?>(null) }
 
-            Text(
-                text = "Location Information",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+	LaunchedEffect(Unit) {
+		val response =
+			placeAutocomplete?.reverse(Point.fromLngLat(route.longitude, route.latitude)) ?: return@LaunchedEffect
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Tabler.Outline.MapPin,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = address, fontSize = 16.sp)
-            }
+		response.onValue { suggestions ->
+			if (suggestions.isNotEmpty()) {
+				val suggestion = suggestions.first()
+				location = suggestion.toSearchSuggestion()
+			}
+		}.onError {
+			// Handle error
+		}
+	}
 
-            Text(
-                text = "Title",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
-            InputField(
-                state = titleState,
-                placeholder = "Give your memory a name",
-                modifier = Modifier.fillMaxWidth(),
-                backgroundColor = Color(0xFFF0F0F0)
-            )
+	Scaffold(
+		topBar = {
+			OptIn(ExperimentalMaterial3Api::class)
+			TopAppBar(
+				title = { Text("Add Entry") },
+				navigationIcon = {
+					IconButton(onClick = { navController.popBackStack() }) {
+						Icon(Tabler.Outline.ArrowLeft, contentDescription = "Back")
+					}
+				}
+			)
+		}
+	) { padding ->
+		Column(
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(padding)
+				.padding(16.dp),
+			verticalArrangement = Arrangement.spacedBy(16.dp)
+		) {
+			// Photo Picker Placeholder
+			Box(
+				modifier = Modifier
+					.fillMaxWidth()
+					.height(200.dp)
+					.clip(RoundedCornerShape(16.dp))
+					.background(Color.LightGray),
+				contentAlignment = Alignment.Center
+			) {
+				Column(horizontalAlignment = Alignment.CenterHorizontally) {
+					Icon(
+						imageVector = Tabler.Outline.Camera,
+						contentDescription = null,
+						modifier = Modifier.size(48.dp),
+						tint = Color.Gray
+					)
+					Text("Add Photo", color = Color.Gray)
+				}
+			}
 
-            Text(
-                text = "Description",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
-            InputField(
-                state = descriptionState,
-                placeholder = "What happened here?",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 100.dp),
-                backgroundColor = Color(0xFFF0F0F0),
-                shape = RoundedCornerShape(16.dp)
-            )
+			Text(
+				text = "Location Information",
+				fontSize = 18.sp,
+				fontWeight = FontWeight.Bold
+			)
 
-            Spacer(modifier = Modifier.weight(1f))
+			Row(verticalAlignment = Alignment.CenterVertically) {
+				Icon(
+					imageVector = Tabler.Outline.MapPin,
+					contentDescription = null,
+					modifier = Modifier.size(20.dp),
+					tint = MaterialTheme.colorScheme.primary
+				)
+				Spacer(modifier = Modifier.width(8.dp))
+				Text(
+					text = location?.let { location ->
+						location.formattedAddress
+							?: location.coordinate?.let { point ->
+								"${point.latitude()}, ${point.longitude()} | ${location.address}"
+							} ?: location.address
+					} ?: "${route.latitude}, ${route.longitude}",
+					fontSize = 16.sp
+				)
+			}
 
-            Button(
-                onClick = {
-                    // TODO: Save the entry
-                    navController.popBackStack()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                Text("Save Entry", fontSize = 18.sp)
-            }
-        }
-    }
+			Text(
+				text = "Title",
+				fontSize = 14.sp,
+				fontWeight = FontWeight.Medium
+			)
+			InputField(
+				state = titleState,
+				placeholder = "Give your memory a name",
+				modifier = Modifier.fillMaxWidth(),
+				backgroundColor = Color(0xFFF0F0F0)
+			)
+
+			Text(
+				text = "Description",
+				fontSize = 14.sp,
+				fontWeight = FontWeight.Medium
+			)
+			InputField(
+				state = descriptionState,
+				placeholder = "What happened here?",
+				modifier = Modifier
+					.fillMaxWidth()
+					.heightIn(min = 100.dp),
+				backgroundColor = Color(0xFFF0F0F0),
+				shape = RoundedCornerShape(16.dp)
+			)
+
+			Spacer(modifier = Modifier.weight(1f))
+
+			Button(
+				onClick = {
+					// TODO: Save the entry
+					navController.popBackStack()
+				},
+				modifier = Modifier.fillMaxWidth(),
+				shape = RoundedCornerShape(12.dp),
+				contentPadding = PaddingValues(16.dp)
+			) {
+				Text("Save Entry", fontSize = 18.sp)
+			}
+		}
+	}
 }

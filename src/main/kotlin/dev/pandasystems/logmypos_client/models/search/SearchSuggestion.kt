@@ -1,31 +1,32 @@
 package dev.pandasystems.logmypos_client.models.search
 
+import com.mapbox.geojson.Point
 import com.mapbox.search.autocomplete.PlaceAutocompleteSuggestion
 
 data class SearchSuggestion(
-	val title: String,
-	val addressName: String?,
+	val address: String,
+	val formattedAddress: String?,
 	val distanceMeters: Double?,
 	val etaMinutes: Double?,
-	val getResult: suspend () -> SearchResult
+	val coordinate: Point?
 ) {
 	companion object {
 		val PREVIEW = SearchSuggestion(
-			title = "Main St",
-			addressName = "123 Main St, London, UK",
+			address = "Main St",
+			formattedAddress = "123 Main St, London, UK",
 			distanceMeters = 0.0,
 			etaMinutes = 0.0,
-			getResult = {SearchResult.PREVIEW}
+			coordinate = Point.fromLngLat(0.0, 0.0)
 		)
 	}
 }
 
-fun PlaceAutocompleteSuggestion.toSearchSuggestion(getResult: suspend () -> SearchResult): SearchSuggestion {
+fun PlaceAutocompleteSuggestion.toSearchSuggestion(): SearchSuggestion {
 	return SearchSuggestion(
-		title = this.name,
-		addressName = this.formattedAddress,
-		distanceMeters = 0.0,
-		etaMinutes = 0.0,
-		getResult = getResult
+		address = this.name,
+		formattedAddress = this.formattedAddress,
+		distanceMeters = this.distanceMeters,
+		etaMinutes = this.etaMinutes,
+		coordinate = this.coordinate
 	)
 }

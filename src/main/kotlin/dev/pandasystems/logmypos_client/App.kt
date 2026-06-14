@@ -23,6 +23,7 @@ import dev.pandasystems.logmypos_client.screen.main.location.AddLocationScreen
 import dev.pandasystems.logmypos_client.screen.main.location.LocationDetailRoute
 import dev.pandasystems.logmypos_client.screen.main.location.LocationDetailScreen
 import dev.pandasystems.logmypos_client.models.search.SearchResult
+import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
 import dev.pandasystems.logmypos_client.screen.main.search.SearchRoute
 import dev.pandasystems.logmypos_client.screen.main.search.SearchScreen
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
@@ -49,7 +50,7 @@ fun App() {
 			PlaceAutocomplete.create(locationProvider = null)
 		}
 		
-		var selectedLocation by remember { mutableStateOf<SearchResult?>(null) }
+		var selectedLocation by remember { mutableStateOf<SearchSuggestion?>(null) }
 
 		Surface(modifier = Modifier.fillMaxSize()) {
 			MapboxMap(
@@ -61,8 +62,8 @@ fun App() {
 				attribution = {},
 				compass = {},
 				content = {
-					if (selectedLocation != null) {
-						PointAnnotation(point = selectedLocation?.coordinate!!)
+					if (selectedLocation?.coordinate != null) {
+						PointAnnotation(point = selectedLocation!!.coordinate!!)
 					}
 				}
 			)
@@ -86,7 +87,7 @@ fun App() {
 				}
 				composable<AddLocationRoute> { backStackEntry ->
 					val route: AddLocationRoute = backStackEntry.toRoute()
-					AddLocationScreen(navController, route.address)
+					AddLocationScreen(route, navController, placeAutocomplete, rememberTextFieldState(), rememberTextFieldState())
 				}
 			}
 		}

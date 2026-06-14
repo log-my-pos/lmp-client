@@ -23,6 +23,7 @@ import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.models.search.SearchResult
+import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
 import dev.pandasystems.logmypos_client.screen.main.search.SearchRoute
 import dev.pandasystems.logmypos_client.theme.Colors
 import kotlinx.serialization.Serializable
@@ -47,7 +48,7 @@ fun MainScreen(
 	rootNavController: NavController,
 	searchState: TextFieldState,
 	mapViewportState: MapViewportState,
-	selectedLocation: SearchResult?,
+	selectedLocation: SearchSuggestion?,
 	closeSelection: () -> Unit
 ) {
 	Box(
