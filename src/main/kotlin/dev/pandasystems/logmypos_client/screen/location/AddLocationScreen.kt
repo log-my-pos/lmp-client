@@ -30,8 +30,6 @@ import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.Camera
 import com.composables.icons.tabler.outline.MapPin
-import com.mapbox.geojson.Point
-import com.mapbox.search.autocomplete.PlaceAutocomplete
 import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.data.JournalEntry
 import dev.pandasystems.logmypos_client.repository.JournalRepository
@@ -44,14 +42,14 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import dev.pandasystems.logmypos_client.models.location.LocationData
-import dev.pandasystems.logmypos_client.models.location.LocationSearch
-import dev.pandasystems.logmypos_client.services.LocationService
+import dev.pandasystems.logmypos_client.services.location.LocationService
+import dev.pandasystems.logmypos_client.utils.SetupPreview
 import org.koin.compose.koinInject
 import kotlin.time.Clock
 
 @Preview
 @Composable
-private fun PreviewAddLocationScreen() {
+private fun PreviewAddLocationScreen() = SetupPreview {
 	AddLocationScreen(
 		route = AddLocationRoute(latitude = 0.0, longitude = 0.0),
 		navController = rememberNavController(),

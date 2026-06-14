@@ -4,9 +4,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -27,11 +29,16 @@ import dev.pandasystems.logmypos_client.screen.main.MainRoute
 import dev.pandasystems.logmypos_client.screen.main.MainScreen
 import dev.pandasystems.logmypos_client.screen.search.SearchRoute
 import dev.pandasystems.logmypos_client.screen.search.SearchScreen
-import dev.pandasystems.logmypos_client.services.LocationService
+import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
 import org.koin.compose.koinInject
 
-@Preview
+//@Preview
+//@Composable
+//fun AppPreview() = SetupPreview {
+//	App()
+//}
+
 @Composable
 fun App() {
 	val navController = rememberNavController()
@@ -50,7 +57,7 @@ fun App() {
 	val repository: JournalRepository = koinInject()
 	val entries by repository.allEntries.collectAsState(emptyList())
 	val locationService: LocationService = koinInject()
-	
+
 	MaterialTheme(
 		typography = hankenGroteskTypography
 	) {

@@ -1,17 +1,25 @@
 package dev.pandasystems.logmypos_client
 
-import com.mapbox.search.autocomplete.PlaceAutocomplete
 import dev.pandasystems.logmypos_client.data.AppDatabase
+import dev.pandasystems.logmypos_client.repository.FakeJournalRepositoryImpl
 import dev.pandasystems.logmypos_client.repository.JournalRepository
-import dev.pandasystems.logmypos_client.services.LocationService
+import dev.pandasystems.logmypos_client.repository.JournalRepositoryImpl
+import dev.pandasystems.logmypos_client.services.location.FakeLocationServiceImpl
+import dev.pandasystems.logmypos_client.services.location.LocationService
+import dev.pandasystems.logmypos_client.services.location.LocationServiceImpl
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.koin.plugin.module.dsl.single
 
 val appModule = module {
-	single { PlaceAutocomplete.create(locationProvider = null) }
 	single { AppDatabase.getDatabase(androidContext()) }
-	single { JournalRepository(get<AppDatabase>().journalEntryDao()) }
+	single { JournalRepositoryImpl(get<AppDatabase>().journalEntryDao()) } bind JournalRepository::class
 	
-	singleOf(::LocationService)
+	single<LocationServiceImpl>() bind LocationService::class
+}
+
+val previewModule = module {
+	single<FakeJournalRepositoryImpl>() bind JournalRepository::class
+	single<FakeLocationServiceImpl>() bind LocationService::class
 }

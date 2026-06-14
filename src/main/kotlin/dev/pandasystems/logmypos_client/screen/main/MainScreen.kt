@@ -23,14 +23,15 @@ import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.screen.search.SearchRoute
-import dev.pandasystems.logmypos_client.services.LocationService
+import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
+import dev.pandasystems.logmypos_client.utils.SetupPreview
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
 
 @Preview
 @Composable
-private fun PreviewComposite() {
+private fun PreviewComposite() = SetupPreview {
 	MainScreen(
 		rememberNavController(),
 		rememberTextFieldState(),

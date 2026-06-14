@@ -19,11 +19,12 @@ import coil.compose.AsyncImage
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.MapPin
+import dev.pandasystems.logmypos_client.utils.SetupPreview
 import kotlinx.serialization.Serializable
 
 @Preview
 @Composable
-private fun PreviewLocationDetailScreen() {
+private fun PreviewLocationDetailScreen() = SetupPreview {
     LocationDetailScreen(
         navController = rememberNavController(),
         name = "Location Name",

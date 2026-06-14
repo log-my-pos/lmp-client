@@ -1,4 +1,4 @@
-package dev.pandasystems.logmypos_client.services
+package dev.pandasystems.logmypos_client.services.location
 
 import com.mapbox.geojson.Point
 import com.mapbox.search.autocomplete.PlaceAutocomplete
@@ -8,12 +8,11 @@ import dev.pandasystems.logmypos_client.models.Address
 import dev.pandasystems.logmypos_client.models.location.LocationData
 import dev.pandasystems.logmypos_client.models.location.LocationSearch
 
-class LocationService(
-	val placeAutocomplete: PlaceAutocomplete
-) {
-	var selectedLocation: LocationData? = null
-	
-	suspend fun findLocations(latitude: Double, longitude: Double): List<LocationSearch> {
+class LocationServiceImpl : LocationService {
+	val placeAutocomplete = PlaceAutocomplete.create(null)
+	override var selectedLocation: LocationData? = null
+
+	override suspend fun findLocations(latitude: Double, longitude: Double): List<LocationSearch> {
 		val suggestions = placeAutocomplete.reverse(Point.fromLngLat(longitude, latitude))
 		
 		var searchEntries: List<LocationSearch> = emptyList()
@@ -24,8 +23,8 @@ class LocationService(
 		
 		return searchEntries
 	}
-	
-	suspend fun queryLocations(text: String): List<LocationSearch> {
+
+	override suspend fun queryLocations(text: String): List<LocationSearch> {
 		val suggestions = placeAutocomplete.suggestions(text)
 
 		var searchEntries: List<LocationSearch> = emptyList()
@@ -36,8 +35,8 @@ class LocationService(
 
 		return searchEntries
 	}
-	
-	fun clearSelection() {
+
+	override fun clearSelection() {
 		selectedLocation = null
 	}
 	

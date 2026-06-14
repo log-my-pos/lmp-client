@@ -30,11 +30,10 @@ import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.MapPin
 import com.composables.icons.tabler.outline.X
-import com.mapbox.search.autocomplete.PlaceAutocomplete
 import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.models.location.LocationSearch
 import dev.pandasystems.logmypos_client.screen.main.MainRoute
-import dev.pandasystems.logmypos_client.services.LocationService
+import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch

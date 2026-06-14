@@ -4,22 +4,14 @@ import dev.pandasystems.logmypos_client.data.JournalEntry
 import dev.pandasystems.logmypos_client.data.JournalEntryDao
 import kotlinx.coroutines.flow.Flow
 
-class JournalRepository(private val journalEntryDao: JournalEntryDao) {
-    val allEntries: Flow<List<JournalEntry>> = journalEntryDao.getAllEntries()
+interface JournalRepository {
+    val allEntries: Flow<List<JournalEntry>>
 
-    suspend fun getEntryById(id: Long): JournalEntry? {
-        return journalEntryDao.getEntryById(id)
-    }
+    suspend fun getEntryById(id: Long): JournalEntry?
 
-    suspend fun insert(entry: JournalEntry): Long {
-        return journalEntryDao.insertEntry(entry)
-    }
+    suspend fun insert(entry: JournalEntry): Long
 
-    suspend fun update(entry: JournalEntry) {
-        journalEntryDao.updateEntry(entry)
-    }
+    suspend fun update(entry: JournalEntry)
 
-    suspend fun delete(entry: JournalEntry) {
-        journalEntryDao.deleteEntry(entry)
-    }
+    suspend fun delete(entry: JournalEntry)
 }
