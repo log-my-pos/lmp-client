@@ -22,11 +22,11 @@ import com.composables.icons.tabler.outline.User
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import dev.pandasystems.logmypos_client.components.InputField
-import dev.pandasystems.logmypos_client.models.search.SearchResult
-import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
-import dev.pandasystems.logmypos_client.screen.main.search.SearchRoute
+import dev.pandasystems.logmypos_client.screen.search.SearchRoute
+import dev.pandasystems.logmypos_client.services.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
 import kotlinx.serialization.Serializable
+import org.koin.compose.koinInject
 
 @Preview
 @Composable
@@ -34,9 +34,7 @@ private fun PreviewComposite() {
 	MainScreen(
 		rememberNavController(),
 		rememberTextFieldState(),
-		rememberMapViewportState(),
-		null,
-		{}
+		rememberMapViewportState()
 	)
 }
 
@@ -48,8 +46,7 @@ fun MainScreen(
 	rootNavController: NavController,
 	searchState: TextFieldState,
 	mapViewportState: MapViewportState,
-	selectedLocation: SearchSuggestion?,
-	closeSelection: () -> Unit
+	locationService: LocationService = koinInject(),
 ) {
 	Box(
 		modifier = Modifier
@@ -58,11 +55,11 @@ fun MainScreen(
 	) {
 		SearchBar(rootNavController, searchState)
 		
-		if (selectedLocation != null) {
-			BackHandler { closeSelection() }
+		if (locationService.selectedLocation != null) {
+			BackHandler { locationService.clearSelection() }
 			
 			Box(Modifier.align(Alignment.BottomCenter)) {
-				LocationViewOverlay(selectedLocation, rootNavController, mapViewportState)
+				LocationViewOverlay(rootNavController, mapViewportState)
 			}
 		}
 	}

@@ -1,6 +1,5 @@
-package dev.pandasystems.logmypos_client.screen.main.location
+package dev.pandasystems.logmypos_client.screen.location
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,7 +19,6 @@ import coil.compose.AsyncImage
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.MapPin
-import dev.pandasystems.logmypos_client.R
 import kotlinx.serialization.Serializable
 
 @Preview

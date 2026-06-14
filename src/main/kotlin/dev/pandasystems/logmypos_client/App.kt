@@ -6,7 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -15,52 +15,45 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
+import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationState
 import com.mapbox.maps.extension.compose.rememberMapState
-import com.mapbox.search.autocomplete.PlaceAutocomplete
+import com.mapbox.maps.extension.compose.style.standard.MapboxStandardStyle
+import dev.pandasystems.logmypos_client.repository.JournalRepository
+import dev.pandasystems.logmypos_client.screen.location.AddLocationRoute
+import dev.pandasystems.logmypos_client.screen.location.AddLocationScreen
+import dev.pandasystems.logmypos_client.screen.location.LocationDetailRoute
+import dev.pandasystems.logmypos_client.screen.location.LocationDetailScreen
 import dev.pandasystems.logmypos_client.screen.main.MainRoute
 import dev.pandasystems.logmypos_client.screen.main.MainScreen
-import dev.pandasystems.logmypos_client.screen.main.location.AddLocationRoute
-import dev.pandasystems.logmypos_client.screen.main.location.AddLocationScreen
-import dev.pandasystems.logmypos_client.screen.main.location.LocationDetailRoute
-import dev.pandasystems.logmypos_client.screen.main.location.LocationDetailScreen
-import dev.pandasystems.logmypos_client.models.search.SearchResult
-import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
-import dev.pandasystems.logmypos_client.screen.main.search.SearchRoute
-import dev.pandasystems.logmypos_client.screen.main.search.SearchScreen
+import dev.pandasystems.logmypos_client.screen.search.SearchRoute
+import dev.pandasystems.logmypos_client.screen.search.SearchScreen
+import dev.pandasystems.logmypos_client.services.LocationService
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
-import dev.pandasystems.logmypos_client.data.AppDatabase
-import dev.pandasystems.logmypos_client.repository.JournalRepository
-import kotlinx.coroutines.flow.collectLatest
+import org.koin.compose.koinInject
 
+@Preview
 @Composable
 fun App() {
+	val navController = rememberNavController()
+	val searchTextFieldState = rememberTextFieldState()
+
+	val mapState = rememberMapState()
+	val mapViewportState = rememberMapViewportState {
+		setCameraOptions {
+			zoom(2.0)
+			center(Point.fromLngLat(-98.0, 39.5))
+			pitch(0.0)
+			bearing(0.0)
+		}
+	}
+
+	val repository: JournalRepository = koinInject()
+	val entries by repository.allEntries.collectAsState(emptyList())
+	val locationService: LocationService = koinInject()
+	
 	MaterialTheme(
 		typography = hankenGroteskTypography
 	) {
-		val navController = rememberNavController()
-		val searchTextFieldState = rememberTextFieldState()
-
-		val mapState = rememberMapState()
-		val mapViewportState = rememberMapViewportState {
-			setCameraOptions {
-				zoom(2.0)
-				center(Point.fromLngLat(-98.0, 39.5))
-				pitch(0.0)
-				bearing(0.0)
-			}
-		}
-		
-		val placeAutocomplete = remember {
-			PlaceAutocomplete.create(locationProvider = null)
-		}
-
-		val context = LocalContext.current
-		val database = remember { AppDatabase.getDatabase(context) }
-		val repository = remember { JournalRepository(database.journalEntryDao()) }
-		val entries by repository.allEntries.collectAsState(emptyList())
-		
-		var selectedLocation by remember { mutableStateOf<SearchSuggestion?>(null) }
-
 		Surface(modifier = Modifier.fillMaxSize()) {
 			MapboxMap(
 				Modifier.fillMaxSize(),
@@ -70,42 +63,49 @@ fun App() {
 				logo = {},
 				attribution = {},
 				compass = {},
+				style = { MapboxStandardStyle() },
 				content = {
-					if (selectedLocation?.coordinate != null) {
-						PointAnnotation(point = selectedLocation!!.coordinate!!)
+					val selectedLocation = locationService.selectedLocation
+					if (selectedLocation != null) {
+						PointAnnotation(point = selectedLocation.coordinate)
 					}
 
 					entries.forEach { entry ->
 						PointAnnotation(
 							point = Point.fromLngLat(entry.longitude, entry.latitude),
-							onClick = {
-								navController.navigate(
-									LocationDetailRoute(
-										name = entry.title,
-										description = entry.description,
-										address = entry.address ?: "",
-										imagePath = entry.imagePath
-									)
-								)
-								true
+							pointAnnotationState = remember {
+								PointAnnotationState().apply {
+									interactionsState.onClicked {
+										navController.navigate(
+											LocationDetailRoute(
+												name = entry.title,
+												description = entry.description,
+												address = entry.address ?: "",
+												imagePath = entry.imagePath
+											)
+										)
+										true
+									}
+								}
 							}
 						)
 					}
 				}
 			)
-			
+
 			NavHost(navController = navController, startDestination = MainRoute) {
 				composable<MainRoute> {
 					MainScreen(
 						navController,
 						searchTextFieldState,
-						mapViewportState,
-						selectedLocation,
-						{ selectedLocation = null }
+						mapViewportState
 					)
 				}
 				composable<SearchRoute> {
-					SearchScreen(navController, searchTextFieldState, placeAutocomplete) { result -> selectedLocation = result }
+					SearchScreen(
+						navController,
+						searchTextFieldState
+					)
 				}
 				composable<LocationDetailRoute> { backStackEntry ->
 					val route: LocationDetailRoute = backStackEntry.toRoute()
@@ -116,10 +116,8 @@ fun App() {
 					AddLocationScreen(
 						route,
 						navController,
-						placeAutocomplete,
 						rememberTextFieldState(),
-						rememberTextFieldState(),
-						repository
+						rememberTextFieldState()
 					)
 				}
 			}

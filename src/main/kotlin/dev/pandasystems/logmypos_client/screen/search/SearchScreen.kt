@@ -1,4 +1,4 @@
-package dev.pandasystems.logmypos_client.screen.main.search
+package dev.pandasystems.logmypos_client.screen.search
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -32,13 +32,14 @@ import com.composables.icons.tabler.outline.MapPin
 import com.composables.icons.tabler.outline.X
 import com.mapbox.search.autocomplete.PlaceAutocomplete
 import dev.pandasystems.logmypos_client.components.InputField
-import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
-import dev.pandasystems.logmypos_client.models.search.toSearchSuggestion
+import dev.pandasystems.logmypos_client.models.location.LocationSearch
 import dev.pandasystems.logmypos_client.screen.main.MainRoute
+import dev.pandasystems.logmypos_client.services.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.koin.compose.koinInject
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -48,8 +49,6 @@ private fun SearchScreenPreview() {
 	SearchScreen(
 		rememberNavController(),
 		rememberTextFieldState("Hello World"),
-		null,
-		{}
 	)
 }
 
@@ -61,8 +60,7 @@ object SearchRoute
 fun SearchScreen(
 	navController: NavController,
 	searchState: TextFieldState,
-	placeAutocomplete: PlaceAutocomplete?,
-	onNewSelection: (SearchSuggestion) -> Unit
+	locationService: LocationService = koinInject(),
 ) {
 	val isPreview = LocalInspectionMode.current
 	val focusManager = LocalFocusManager.current
@@ -76,18 +74,11 @@ fun SearchScreen(
 				emptyList()
 			else
 				listOf(
-					SearchSuggestion.PREVIEW.copy(
-						name = "123 Main St, London, UK",
-						formattedAddress = "Main St",
-						distanceMeters = 1340.0,
-						etaMinutes = 120.0,
-					),
-					SearchSuggestion.PREVIEW.copy(
-						name = "456 High St, Manchester, UK",
-						formattedAddress = "High St",
-						distanceMeters = 120320.0,
-						etaMinutes = 1000.0,
-					),
+					LocationSearch.PREVIEW,
+					LocationSearch.PREVIEW,
+					LocationSearch.PREVIEW,
+					LocationSearch.PREVIEW,
+					LocationSearch.PREVIEW,
 				)
 		)
 	}
@@ -98,21 +89,15 @@ fun SearchScreen(
 	}
 
 	LaunchedEffect(searchState.text.toString()) {
+		if (isPreview) return@LaunchedEffect
+		
 		val query = searchState.text.toString().trim()
 		if (query.isBlank()) {
 			suggestions = emptyList()
 			return@LaunchedEffect
 		}
 
-		val suggestionResponse = placeAutocomplete?.suggestions(query = query) ?: return@LaunchedEffect
-
-		suggestionResponse.onValue { results ->
-			suggestions = results.map { suggestion ->
-				suggestion.toSearchSuggestion()
-			}
-		}.onError { error ->
-			suggestions = emptyList()
-		}
+		suggestions = locationService.queryLocations(query)
 	}
 
 	Surface(
@@ -191,9 +176,7 @@ fun SearchScreen(
 						SearchSuggestionItem(
 							suggestion = suggestion,
 							onClick = {
-								coroutineScope.launch {
-									onNewSelection(suggestion)
-								}
+								coroutineScope.launch { locationService.selectedLocation = suggestion.resolve() }
 								navController.navigate(MainRoute)
 								focusManager.clearFocus()
 								keyboardController?.hide()
@@ -214,7 +197,7 @@ fun SearchScreen(
 
 @Composable
 private fun SearchSuggestionItem(
-	suggestion: SearchSuggestion,
+	suggestion: LocationSearch,
 	onClick: () -> Unit
 ) {
 	Surface(
@@ -254,7 +237,7 @@ private fun SearchSuggestionItem(
 				)
 				if (suggestion.formattedAddress != null) {
 					Text(
-						text = suggestion.formattedAddress,
+						text = suggestion.formattedAddress!!,
 						fontSize = 14.sp,
 						color = Colors.text.copy(alpha = 0.6f),
 						maxLines = 1,
@@ -267,7 +250,7 @@ private fun SearchSuggestionItem(
 				Spacer(modifier = Modifier.width(8.dp))
 				Column(horizontalAlignment = Alignment.End) {
 					Text(
-						text = formatDistanceKm(suggestion.distanceMeters),
+						text = formatDistanceKm(suggestion.distanceMeters!!),
 						fontSize = 14.sp,
 						fontWeight = FontWeight.Bold,
 						color = Colors.text

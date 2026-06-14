@@ -23,14 +23,13 @@ import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.MapPin
 import com.composables.icons.tabler.outline.Plus
 import com.composables.icons.tabler.outline.X
-import com.mapbox.geojson.Point
 import com.mapbox.maps.dsl.cameraOptions
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
-import dev.pandasystems.logmypos_client.models.search.SearchResult
-import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
-import dev.pandasystems.logmypos_client.screen.main.location.AddLocationRoute
+import dev.pandasystems.logmypos_client.screen.location.AddLocationRoute
+import dev.pandasystems.logmypos_client.services.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
+import org.koin.compose.koinInject
 
 @Preview
 @Composable
@@ -38,7 +37,6 @@ private fun LocationViewOverlayPreview() {
 	Box(Modifier.fillMaxSize()) {
 		Box(Modifier.align(Alignment.BottomCenter)) {
 			LocationViewOverlay(
-				location = SearchSuggestion.PREVIEW,
 				navController = rememberNavController(),
 				mapViewportState = rememberMapViewportState()
 			)
@@ -48,15 +46,15 @@ private fun LocationViewOverlayPreview() {
 
 @Composable
 fun LocationViewOverlay(
-	location: SearchSuggestion,
 	navController: NavController,
-	mapViewportState: MapViewportState
+	mapViewportState: MapViewportState,
+	locationService: LocationService = koinInject(),
 ) {
-	val (name, address, distanceMeters, etaMinutes) = location
-
+	val location = locationService.selectedLocation ?: return
+	
 	LaunchedEffect(Unit) {
 		mapViewportState.flyTo(cameraOptions {
-			center(coordinate)
+			center(location.coordinate)
 			zoom(14.0)
 		})
 	}
@@ -106,7 +104,7 @@ fun LocationViewOverlay(
 						fontWeight = FontWeight.Medium
 					)
 					Text(
-						text = address ?: name,
+						text = location.address?.formattedAddress ?: location.name,
 						fontSize = 16.sp,
 						color = Colors.text,
 						fontWeight = FontWeight.SemiBold,
@@ -117,6 +115,7 @@ fun LocationViewOverlay(
 				IconButton(
 					onClick = {
 						navController.navigate(MainRoute)
+						locationService.clearSelection()
 					},
 					modifier = Modifier.size(32.dp)
 				) {
@@ -130,7 +129,7 @@ fun LocationViewOverlay(
 
 			Button(
 				onClick = {
-					val coordinate = location.coordinate ?: return@Button
+					val coordinate = location.coordinate
 					navController.navigate(AddLocationRoute(coordinate.longitude(), coordinate.latitude()))
 				},
 				modifier = Modifier.fillMaxWidth(),

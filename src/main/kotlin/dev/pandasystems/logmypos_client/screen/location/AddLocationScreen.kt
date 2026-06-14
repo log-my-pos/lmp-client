@@ -1,4 +1,4 @@
-package dev.pandasystems.logmypos_client.screen.main.location
+package dev.pandasystems.logmypos_client.screen.location
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -34,8 +34,6 @@ import com.mapbox.geojson.Point
 import com.mapbox.search.autocomplete.PlaceAutocomplete
 import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.data.JournalEntry
-import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
-import dev.pandasystems.logmypos_client.models.search.toSearchSuggestion
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -45,6 +43,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import dev.pandasystems.logmypos_client.models.location.LocationData
+import dev.pandasystems.logmypos_client.models.location.LocationSearch
+import dev.pandasystems.logmypos_client.services.LocationService
+import org.koin.compose.koinInject
 import kotlin.time.Clock
 
 @Preview
@@ -53,7 +55,6 @@ private fun PreviewAddLocationScreen() {
 	AddLocationScreen(
 		route = AddLocationRoute(latitude = 0.0, longitude = 0.0),
 		navController = rememberNavController(),
-		placeAutocomplete = null,
 		titleState = rememberTextFieldState(),
 		descriptionState = rememberTextFieldState(),
 	)
@@ -70,12 +71,12 @@ data class AddLocationRoute(
 fun AddLocationScreen(
 	route: AddLocationRoute,
 	navController: NavController,
-	placeAutocomplete: PlaceAutocomplete?,
 	titleState: TextFieldState,
 	descriptionState: TextFieldState,
-	repository: JournalRepository? = null,
+	locationService: LocationService = koinInject(),
+	repository: JournalRepository = koinInject(),
 ) {
-	var location by remember { mutableStateOf<SearchSuggestion?>(null) }
+	var location by remember { mutableStateOf<LocationData?>(null) }
 	var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
 	val context = LocalContext.current
 	val scope = rememberCoroutineScope()
@@ -86,17 +87,8 @@ fun AddLocationScreen(
 	)
 
 	LaunchedEffect(Unit) {
-		val response =
-			placeAutocomplete?.reverse(Point.fromLngLat(route.longitude, route.latitude)) ?: return@LaunchedEffect
-
-		response.onValue { suggestions ->
-			if (suggestions.isNotEmpty()) {
-				val suggestion = suggestions.first()
-				location = suggestion.toSearchSuggestion()
-			}
-		}.onError {
-			// Handle error
-		}
+		location = locationService.findLocations(route.longitude, route.latitude)
+			.firstOrNull()?.resolve()
 	}
 
 	Scaffold(
@@ -169,10 +161,10 @@ fun AddLocationScreen(
 				Spacer(modifier = Modifier.width(8.dp))
 				Text(
 					text = location?.let { location ->
-						location.formattedAddress
-							?: location.coordinate?.let { point ->
+						location.address?.formattedAddress
+							?: location.coordinate.let { point ->
 								"${point.latitude()}, ${point.longitude()} | ${location.name}"
-							} ?: location.name
+							}
 					} ?: "${route.latitude}, ${route.longitude}",
 					fontSize = 16.sp
 				)
@@ -219,12 +211,12 @@ fun AddLocationScreen(
 							description = descriptionState.text.toString(),
 							latitude = route.latitude,
 							longitude = route.longitude,
-							address = location?.formattedAddress ?: location?.name,
+							address = location?.address?.formattedAddress ?: location?.name,
 							date = Clock.System.now().toEpochMilliseconds(),
 							imagePath = imagePath
 						)
 
-						repository?.insert(entry)
+						repository.insert(entry)
 						navController.popBackStack()
 					}
 				},
