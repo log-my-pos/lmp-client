@@ -171,8 +171,8 @@ fun AddLocationScreen(
 					text = location?.let { location ->
 						location.formattedAddress
 							?: location.coordinate?.let { point ->
-								"${point.latitude()}, ${point.longitude()} | ${location.address}"
-							} ?: location.address
+								"${point.latitude()}, ${point.longitude()} | ${location.name}"
+							} ?: location.name
 					} ?: "${route.latitude}, ${route.longitude}",
 					fontSize = 16.sp
 				)
@@ -219,7 +219,7 @@ fun AddLocationScreen(
 							description = descriptionState.text.toString(),
 							latitude = route.latitude,
 							longitude = route.longitude,
-							address = location?.formattedAddress ?: location?.address,
+							address = location?.formattedAddress ?: location?.name,
 							date = Clock.System.now().toEpochMilliseconds(),
 							imagePath = imagePath
 						)

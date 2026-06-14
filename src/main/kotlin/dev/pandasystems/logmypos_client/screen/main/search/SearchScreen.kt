@@ -33,8 +33,6 @@ import com.composables.icons.tabler.outline.X
 import com.mapbox.search.autocomplete.PlaceAutocomplete
 import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.models.search.SearchSuggestion
-import dev.pandasystems.logmypos_client.models.search.SearchResult
-import dev.pandasystems.logmypos_client.models.search.toSearchResult
 import dev.pandasystems.logmypos_client.models.search.toSearchSuggestion
 import dev.pandasystems.logmypos_client.screen.main.MainRoute
 import dev.pandasystems.logmypos_client.theme.Colors
@@ -79,13 +77,13 @@ fun SearchScreen(
 			else
 				listOf(
 					SearchSuggestion.PREVIEW.copy(
-						address = "123 Main St, London, UK",
+						name = "123 Main St, London, UK",
 						formattedAddress = "Main St",
 						distanceMeters = 1340.0,
 						etaMinutes = 120.0,
 					),
 					SearchSuggestion.PREVIEW.copy(
-						address = "456 High St, Manchester, UK",
+						name = "456 High St, Manchester, UK",
 						formattedAddress = "High St",
 						distanceMeters = 120320.0,
 						etaMinutes = 1000.0,
@@ -247,7 +245,7 @@ private fun SearchSuggestionItem(
 
 			Column(modifier = Modifier.weight(1f)) {
 				Text(
-					text = suggestion.address,
+					text = suggestion.name,
 					fontSize = 16.sp,
 					fontWeight = FontWeight.SemiBold,
 					color = Colors.text,
