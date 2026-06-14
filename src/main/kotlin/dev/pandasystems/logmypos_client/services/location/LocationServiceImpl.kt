@@ -1,5 +1,8 @@
 package dev.pandasystems.logmypos_client.services.location
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.mapbox.geojson.Point
 import com.mapbox.search.autocomplete.PlaceAutocomplete
 import com.mapbox.search.autocomplete.PlaceAutocompleteResult
@@ -10,7 +13,7 @@ import dev.pandasystems.logmypos_client.models.location.LocationSearch
 
 class LocationServiceImpl : LocationService {
 	val placeAutocomplete = PlaceAutocomplete.create(null)
-	override var selectedLocation: LocationData? = null
+	override var selectedLocation: LocationData? by mutableStateOf(null)
 
 	override suspend fun findLocations(latitude: Double, longitude: Double): List<LocationSearch> {
 		val suggestions = placeAutocomplete.reverse(Point.fromLngLat(longitude, latitude))

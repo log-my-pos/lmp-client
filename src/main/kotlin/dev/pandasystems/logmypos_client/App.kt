@@ -80,36 +80,26 @@ fun App() {
 					val marker = rememberIconImage(key = markerResourceId, painter = painterResource(markerResourceId))
 					val selectedLocation = locationService.selectedLocation
 					if (selectedLocation != null) {
-						PointAnnotation(
-							point = selectedLocation.coordinate,
-							pointAnnotationState = remember {
-								PointAnnotationState().apply {
-									iconImage = marker
-								}
-							}
-						)
+						PointAnnotation(selectedLocation.coordinate) {
+							iconImage = marker
+						}
 					}
 
 					entries.forEach { entry ->
-						PointAnnotation(
-							point = Point.fromLngLat(entry.longitude, entry.latitude),
-							pointAnnotationState = remember {
-								PointAnnotationState().apply {
-									iconImage = marker
-									interactionsState.onClicked {
-										navController.navigate(
-											LocationDetailRoute(
-												name = entry.title,
-												description = entry.description,
-												address = entry.address ?: "",
-												imagePath = entry.imagePath
-											)
-										)
-										true
-									}
-								}
+						PointAnnotation(Point.fromLngLat(entry.longitude, entry.latitude)) {
+							iconImage = marker
+							interactionsState.onClicked {
+								navController.navigate(
+									LocationDetailRoute(
+										name = entry.title,
+										description = entry.description,
+										address = entry.address ?: "",
+										imagePath = entry.imagePath
+									)
+								)
+								true
 							}
-						)
+						}
 					}
 				}
 			)
