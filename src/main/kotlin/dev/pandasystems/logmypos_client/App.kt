@@ -7,6 +7,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
@@ -33,6 +34,7 @@ import dev.pandasystems.logmypos_client.screen.search.SearchScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
 import dev.pandasystems.logmypos_client.utils.SetupPreview
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @Preview
@@ -45,6 +47,7 @@ fun AppPreview() = SetupPreview {
 fun App() {
 	val navController = rememberNavController()
 	val searchTextFieldState = rememberTextFieldState()
+	val scope = rememberCoroutineScope()
 
 	val mapState = rememberMapState()
 	val mapViewportState = rememberMapViewportState {
@@ -68,6 +71,12 @@ fun App() {
 				Modifier.fillMaxSize(),
 				mapState = mapState,
 				mapViewportState = mapViewportState,
+				onMapClickListener = { point ->
+					scope.launch {
+						locationService.selectLocation(point.latitude(), point.longitude())
+					}
+					true
+				},
 				scaleBar = {},
 				logo = {},
 				attribution = {},

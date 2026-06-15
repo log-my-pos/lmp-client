@@ -8,6 +8,7 @@ interface LocationService {
 	
 	suspend fun findLocations(latitude: Double, longitude: Double): List<LocationSearch>
 	suspend fun queryLocations(text: String): List<LocationSearch>
+	suspend fun selectLocation(latitude: Double, longitude: Double)
 	
 	fun clearSelection() {
 		selectedLocation = null

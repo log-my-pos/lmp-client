@@ -52,8 +52,8 @@ fun LocationViewOverlay(
 	locationService: LocationService = koinInject(),
 ) {
 	val location = locationService.selectedLocation ?: return
-	
-	LaunchedEffect(Unit) {
+
+	LaunchedEffect(location) {
 		mapViewportState.flyTo(cameraOptions {
 			center(location.coordinate)
 			zoom(14.0)

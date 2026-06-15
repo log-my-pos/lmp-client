@@ -14,6 +14,10 @@ class FakeLocationServiceImpl : LocationService {
 		return emptyList()
 	}
 
+	override suspend fun selectLocation(latitude: Double, longitude: Double) {
+
+	}
+
 	override fun clearSelection() {
 		selectedLocation = null
 	}
