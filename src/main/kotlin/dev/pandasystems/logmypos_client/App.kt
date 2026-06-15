@@ -7,9 +7,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -18,12 +17,10 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
-import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationState
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
 import com.mapbox.maps.extension.compose.rememberMapState
 import com.mapbox.maps.extension.compose.style.MapStyle
-import com.mapbox.maps.extension.compose.style.standard.MapboxStandardStyle
-import com.mapbox.maps.plugin.annotation.generated.PointAnnotation
+import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.screen.location.AddLocationRoute
 import dev.pandasystems.logmypos_client.screen.location.AddLocationScreen
@@ -35,13 +32,14 @@ import dev.pandasystems.logmypos_client.screen.search.SearchRoute
 import dev.pandasystems.logmypos_client.screen.search.SearchScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
+import dev.pandasystems.logmypos_client.utils.SetupPreview
 import org.koin.compose.koinInject
 
-//@Preview
-//@Composable
-//fun AppPreview() = SetupPreview {
-//	App()
-//}
+@Preview
+@Composable
+fun AppPreview() = SetupPreview {
+	App()
+}
 
 @Composable
 fun App() {
@@ -76,18 +74,21 @@ fun App() {
 				compass = {},
 				style = { MapStyle(style = "mapbox://styles/julianmaggio/cmoijn6tp002201sfdm0nab23") },
 				content = {
-					val markerResourceId = R.drawable.preview_image
-					val marker = rememberIconImage(key = markerResourceId, painter = painterResource(markerResourceId))
+					val marker = rememberIconImage(R.drawable.marker)
 					val selectedLocation = locationService.selectedLocation
 					if (selectedLocation != null) {
 						PointAnnotation(selectedLocation.coordinate) {
 							iconImage = marker
+							iconSize = 0.35
+							iconAnchor = IconAnchor.BOTTOM
 						}
 					}
 
 					entries.forEach { entry ->
 						PointAnnotation(Point.fromLngLat(entry.longitude, entry.latitude)) {
 							iconImage = marker
+							iconSize = 0.35
+							iconAnchor = IconAnchor.BOTTOM
 							interactionsState.onClicked {
 								navController.navigate(
 									LocationDetailRoute(
