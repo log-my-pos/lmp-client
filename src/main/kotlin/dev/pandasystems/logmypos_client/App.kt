@@ -1,7 +1,7 @@
 package dev.pandasystems.logmypos_client
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -10,26 +10,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
+import cafe.adriel.voyager.navigator.CurrentScreen
+import cafe.adriel.voyager.navigator.Navigator
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
-import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
-import com.mapbox.maps.extension.compose.rememberMapState
 import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
+import dev.pandasystems.logmypos_client.models.GlobalData
 import dev.pandasystems.logmypos_client.repository.JournalRepository
-import dev.pandasystems.logmypos_client.screen.location.AddLocationRoute
-import dev.pandasystems.logmypos_client.screen.location.AddLocationScreen
-import dev.pandasystems.logmypos_client.screen.location.LocationDetailRoute
 import dev.pandasystems.logmypos_client.screen.location.LocationDetailScreen
-import dev.pandasystems.logmypos_client.screen.main.MainRoute
 import dev.pandasystems.logmypos_client.screen.main.MainScreen
-import dev.pandasystems.logmypos_client.screen.search.SearchRoute
-import dev.pandasystems.logmypos_client.screen.search.SearchScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
 import dev.pandasystems.logmypos_client.utils.SetupPreview
@@ -44,18 +36,8 @@ fun AppPreview() = SetupPreview {
 
 @Composable
 fun App() {
-	val searchTextFieldState = rememberTextFieldState()
+	val globalData: GlobalData = koinInject()
 	val scope = rememberCoroutineScope()
-
-	val mapState = rememberMapState()
-	val mapViewportState = rememberMapViewportState {
-		setCameraOptions {
-			zoom(2.0)
-			center(Point.fromLngLat(-98.0, 39.5))
-			pitch(0.0)
-			bearing(0.0)
-		}
-	}
 
 	val repository: JournalRepository = koinInject()
 	val entries by repository.allEntries.collectAsState(emptyList())
@@ -65,79 +47,57 @@ fun App() {
 		typography = hankenGroteskTypography
 	) {
 		Surface(modifier = Modifier.fillMaxSize()) {
-			MapboxMap(
-				Modifier.fillMaxSize(),
-				mapState = mapState,
-				mapViewportState = mapViewportState,
-				onMapClickListener = { point ->
-					scope.launch {
-						locationService.selectLocation(point.latitude(), point.longitude())
-					}
-					true
-				},
-				scaleBar = {},
-				logo = {},
-				attribution = {},
-				compass = {},
-				style = { MapStyle(style = "mapbox://styles/julianmaggio/cmoijn6tp002201sfdm0nab23") },
-				content = {
-					val marker = rememberIconImage(R.drawable.marker)
-					val selectedLocation = locationService.selectedLocation
-					if (selectedLocation != null) {
-						PointAnnotation(selectedLocation.coordinate) {
-							iconImage = marker
-							iconSize = 0.35
-							iconAnchor = IconAnchor.BOTTOM
-						}
-					}
+			Navigator(MainScreen()) { navigator ->
+				Box(Modifier.fillMaxSize()) {
+					MapboxMap(
+						Modifier.fillMaxSize(),
+						mapState = globalData.mapState,
+						mapViewportState = globalData.mapViewportState,
+						onMapClickListener = { point ->
+							scope.launch {
+								locationService.selectLocation(point.latitude(), point.longitude())
+							}
+							true
+						},
+						scaleBar = {},
+						logo = {},
+						attribution = {},
+						compass = {},
+						style = { MapStyle(style = "mapbox://styles/julianmaggio/cmoijn6tp002201sfdm0nab23") },
+						content = {
+							val marker = rememberIconImage(R.drawable.marker)
+							val selectedLocation = locationService.selectedLocation
+							if (selectedLocation != null) {
+								PointAnnotation(selectedLocation.coordinate) {
+									iconImage = marker
+									iconSize = 0.35
+									iconAnchor = IconAnchor.BOTTOM
+								}
+							}
 
-					entries.forEach { entry ->
-						PointAnnotation(Point.fromLngLat(entry.longitude, entry.latitude)) {
-							iconImage = marker
-							iconSize = 0.35
-							iconAnchor = IconAnchor.BOTTOM
-							interactionsState.onClicked {
-								navController.navigate(
-									LocationDetailRoute(
-										name = entry.title,
-										description = entry.description,
-										address = entry.address ?: "",
-										imagePath = entry.imagePath
-									)
-								)
-								true
+							entries.forEach { entry ->
+								PointAnnotation(Point.fromLngLat(entry.longitude, entry.latitude)) {
+									iconImage = marker
+									iconSize = 0.35
+									iconAnchor = IconAnchor.BOTTOM
+									interactionsState.onClicked {
+										navigator.push(
+											LocationDetailScreen(
+												name = entry.title,
+												description = entry.description,
+												address = entry.address ?: "",
+												imagePath = entry.imagePath
+											)
+										)
+										true
+									}
+								}
 							}
 						}
-					}
-				}
-			)
+					)
 
-			NavHost(navController = navController, startDestination = MainRoute) {
-				composable<MainRoute> {
-					MainScreen(
-						navController,
-						searchTextFieldState,
-						mapViewportState
-					)
-				}
-				composable<SearchRoute> {
-					SearchScreen(
-						navController,
-						searchTextFieldState
-					)
-				}
-				composable<LocationDetailRoute> { backStackEntry ->
-					val route: LocationDetailRoute = backStackEntry.toRoute()
-					LocationDetailScreen(navController, route.name, route.description, route.address, route.imagePath)
-				}
-				composable<AddLocationRoute> { backStackEntry ->
-					val route: AddLocationRoute = backStackEntry.toRoute()
-					AddLocationScreen(
-						route,
-						navController,
-						rememberTextFieldState(),
-						rememberTextFieldState()
-					)
+					// Composite the current active screen
+					CurrentScreen()
 				}
 			}
 		}

@@ -4,7 +4,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,24 +16,27 @@ import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.Search
 import com.composables.icons.tabler.outline.User
 import dev.pandasystems.logmypos_client.components.InputField
-import dev.pandasystems.logmypos_client.screen.models.SearchModel
-import dev.pandasystems.logmypos_client.screen.search.SearchRoute
+import dev.pandasystems.logmypos_client.models.GlobalData
+import dev.pandasystems.logmypos_client.screen.search.SearchScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
+import dev.pandasystems.logmypos_client.utils.SetupPreviewScreen
 import org.koin.compose.koinInject
 
+@Preview
+@Composable
+private fun PreviewMainScreen() = SetupPreviewScreen(MainScreen())
+
 class MainScreen : Screen {
-	@Preview
 	@Composable
 	override fun Content() {
-		val searchModel = koinScreenModel<SearchModel>()
+		val globalData = koinInject<GlobalData>()
 		val locationService = koinInject<LocationService>()
 
 		Box(
@@ -39,13 +44,13 @@ class MainScreen : Screen {
 				.fillMaxSize()
 				.systemBarsPadding()
 		) {
-			SearchBar(searchModel.searchbarState)
+			SearchBar(globalData.searchbarState)
 
 			if (locationService.selectedLocation != null) {
 				BackHandler { locationService.clearSelection() }
 
 				Box(Modifier.align(Alignment.BottomCenter)) {
-					LocationViewOverlay(mapViewportState)
+					LocationViewOverlay()
 				}
 			}
 		}
@@ -61,7 +66,7 @@ class MainScreen : Screen {
 				.fillMaxWidth()
 				.padding(16.dp)
 				.onFocusChanged {
-					if (it.isFocused) navigator.push(SearchRoute)
+					if (it.isFocused) navigator.push(SearchScreen())
 				}
 				.dropShadow(
 					CircleShape,

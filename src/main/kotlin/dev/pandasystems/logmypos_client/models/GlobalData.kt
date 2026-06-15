@@ -1,13 +1,13 @@
-package dev.pandasystems.logmypos_client.screen.models
+package dev.pandasystems.logmypos_client.models
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import cafe.adriel.voyager.core.model.ScreenModel
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapState
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 
-class MapModel : ScreenModel {
+class GlobalData {
     val mapState by mutableStateOf(MapState())
     val mapViewportState by mutableStateOf(MapViewportState().apply {
         setCameraOptions {
@@ -17,4 +17,6 @@ class MapModel : ScreenModel {
             bearing(0.0)
         }
     })
+
+    val searchbarState by mutableStateOf(TextFieldState())
 }
