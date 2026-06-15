@@ -52,7 +52,9 @@ dependencies {
 	implementation(libs.koin.android)
 	implementation(libs.koin.androidx.compose)
 
-	implementation(libs.jetbrains.navigation)
+	implementation(libs.voyager.navigator)
+	implementation(libs.voyager.screenModel)
+	implementation(libs.voyager.koin)
 
 	implementation(libs.mapbox.map.compose)
 	implementation(libs.mapbox.map.android)

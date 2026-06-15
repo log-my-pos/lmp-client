@@ -17,7 +17,7 @@ composeMultiplatform = "1.11.1"
 composeHotReload = "1.2.0-alpha02"
 material3 = "1.10.0-alpha05"
 
-jetbrains-navigation = "2.9.2"
+voyager = "1.1.0-beta02"
 
 mapbox = "11.23.0"
 mapbox-search = "2.24.3"
@@ -54,7 +54,15 @@ koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel" }
 koin-ktor = { module = "io.insert-koin:koin-ktor" }
 koin-test = { module = "io.insert-koin:koin-test" }
 
-jetbrains-navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "jetbrains-navigation" }
+voyager-navigator = { module = "cafe.adriel.voyager:voyager-navigator", version.ref = "voyager" }
+voyager-screenModel = { module = "cafe.adriel.voyager:voyager-screenmodel", version.ref = "voyager" }
+voyager-bottomSheetNavigator = { module = "cafe.adriel.voyager:voyager-bottom-sheet-navigator", version.ref = "voyager" }
+voyager-tabNavigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", version.ref = "voyager" }
+voyager-transitions = { module = "cafe.adriel.voyager:voyager-transitions", version.ref = "voyager" }
+voyager-koin = { module = "cafe.adriel.voyager:voyager-koin", version.ref = "voyager" }
+voyager-hilt = { module = "cafe.adriel.voyager:voyager-hilt", version.ref = "voyager" }
+voyager-kodein = { module = "cafe.adriel.voyager:voyager-kodein", version.ref = "voyager" }
+voyager-rxjava = { module = "cafe.adriel.voyager:voyager-rxjava", version.ref = "voyager" }
 
 mapbox-map-compose = { module = "com.mapbox.extension:maps-compose-ndk27", version.ref = "mapbox" }
 mapbox-map-android = { module = "com.mapbox.maps:android-ndk27", version.ref = "mapbox" }

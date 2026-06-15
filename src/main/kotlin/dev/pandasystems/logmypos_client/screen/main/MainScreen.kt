@@ -4,7 +4,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,109 +13,97 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.koin.koinScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.Search
 import com.composables.icons.tabler.outline.User
-import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
-import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import dev.pandasystems.logmypos_client.components.InputField
+import dev.pandasystems.logmypos_client.screen.models.SearchModel
 import dev.pandasystems.logmypos_client.screen.search.SearchRoute
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
-import dev.pandasystems.logmypos_client.utils.SetupPreview
-import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
 
-@Preview
-@Composable
-private fun PreviewComposite() = SetupPreview {
-	MainScreen(
-		rememberNavController(),
-		rememberTextFieldState(),
-		rememberMapViewportState()
-	)
-}
+class MainScreen : Screen {
+	@Preview
+	@Composable
+	override fun Content() {
+		val searchModel = koinScreenModel<SearchModel>()
+		val locationService = koinInject<LocationService>()
 
-@Serializable
-object MainRoute
+		Box(
+			modifier = Modifier
+				.fillMaxSize()
+				.systemBarsPadding()
+		) {
+			SearchBar(searchModel.searchbarState)
 
-@Composable
-fun MainScreen(
-	rootNavController: NavController,
-	searchState: TextFieldState,
-	mapViewportState: MapViewportState,
-	locationService: LocationService = koinInject(),
-) {
-	Box(
-		modifier = Modifier
-			.fillMaxSize()
-			.systemBarsPadding()
-	) {
-		SearchBar(rootNavController, searchState)
-		
-		if (locationService.selectedLocation != null) {
-			BackHandler { locationService.clearSelection() }
-			
-			Box(Modifier.align(Alignment.BottomCenter)) {
-				LocationViewOverlay(rootNavController, mapViewportState)
+			if (locationService.selectedLocation != null) {
+				BackHandler { locationService.clearSelection() }
+
+				Box(Modifier.align(Alignment.BottomCenter)) {
+					LocationViewOverlay(mapViewportState)
+				}
 			}
 		}
 	}
-}
 
-@Composable
-private fun SearchBar(rootNavController: NavController, searchState: TextFieldState) {
-	InputField(
-		state = searchState,
-		placeholder = "Search for a place",
-		modifier = Modifier
-			.fillMaxWidth()
-			.padding(16.dp)
-			.onFocusChanged {
-				if (it.isFocused) rootNavController.navigate(SearchRoute)
-			}
-			.dropShadow(
-				CircleShape,
-				Shadow(
-					radius = 8.dp,
-					color = Colors.shadow
-				)
-			),
-		backgroundColor = Colors.background,
-		leftContent = {
-			Box(
-				modifier = Modifier
-					.padding(4.dp)
-					.size(36.dp),
-			) {
-				Icon(
-					imageVector = Tabler.Outline.Search,
-					contentDescription = "Search icon",
+	@Composable
+	private fun SearchBar(searchState: TextFieldState) {
+		val navigator = LocalNavigator.currentOrThrow
+		InputField(
+			state = searchState,
+			placeholder = "Search for a place",
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(16.dp)
+				.onFocusChanged {
+					if (it.isFocused) navigator.push(SearchRoute)
+				}
+				.dropShadow(
+					CircleShape,
+					Shadow(
+						radius = 8.dp,
+						color = Colors.shadow
+					)
+				),
+			backgroundColor = Colors.background,
+			leftContent = {
+				Box(
 					modifier = Modifier
-						.fillMaxSize()
-						.padding(6.dp)
-				)
-			}
-		},
-		rightContent = {
-			IconButton(
-				modifier = Modifier
-					.padding(4.dp)
-					.size(36.dp),
-				onClick = {
-					// TODO: Open Profile
-				}, colors = IconButtonDefaults.iconButtonColors(contentColor = Colors.text)
-			) {
-				Icon(
-					imageVector = Tabler.Outline.User,
-					contentDescription = "User profile",
+						.padding(4.dp)
+						.size(36.dp),
+				) {
+					Icon(
+						imageVector = Tabler.Outline.Search,
+						contentDescription = "Search icon",
+						modifier = Modifier
+							.fillMaxSize()
+							.padding(6.dp)
+					)
+				}
+			},
+			rightContent = {
+				IconButton(
 					modifier = Modifier
-						.fillMaxSize()
-						.padding(6.dp)
-				)
+						.padding(4.dp)
+						.size(36.dp),
+					onClick = {
+						// TODO: Open Profile
+					}, colors = IconButtonDefaults.iconButtonColors(contentColor = Colors.text)
+				) {
+					Icon(
+						imageVector = Tabler.Outline.User,
+						contentDescription = "User profile",
+						modifier = Modifier
+							.fillMaxSize()
+							.padding(6.dp)
+					)
+				}
 			}
-		}
-	)
+		)
+	}
 }
