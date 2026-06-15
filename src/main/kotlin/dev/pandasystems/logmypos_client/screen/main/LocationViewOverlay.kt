@@ -29,21 +29,19 @@ import dev.pandasystems.logmypos_client.screen.location.AddLocationScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
 import dev.pandasystems.logmypos_client.utils.SetupPreview
+import dev.pandasystems.logmypos_client.utils.backTo
+import dev.pandasystems.logmypos_client.utils.getNavigator
 import org.koin.compose.koinInject
 
 @Preview
 @Composable
 private fun LocationViewOverlayPreview() = SetupPreview {
-    Box(Modifier.fillMaxSize()) {
-        Box(Modifier.align(Alignment.BottomCenter)) {
-            LocationViewOverlay()
-        }
-    }
+    LocationViewOverlay()
 }
 
 @Composable
 fun LocationViewOverlay() {
-    val navigator = LocalNavigator.currentOrThrow
+    val navigator = getNavigator()
     val locationService = koinInject<LocationService>()
     val globalData = koinInject<GlobalData>()
     val mapViewportState = globalData.mapViewportState
@@ -112,7 +110,7 @@ fun LocationViewOverlay() {
 
                 IconButton(
                     onClick = {
-                        navigator.popUntil { MainScreen::class.isInstance(it) }
+                        navigator.backTo<MainScreen>()
                         locationService.clearSelection()
                     },
                     modifier = Modifier.size(32.dp)
@@ -128,7 +126,7 @@ fun LocationViewOverlay() {
             Button(
                 onClick = {
                     val coordinate = location.coordinate
-                    navigator.push(AddLocationScreen(coordinate.longitude(), coordinate.latitude()))
+                    navigator.navigateTo(AddLocationScreen(coordinate.longitude(), coordinate.latitude()))
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
