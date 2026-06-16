@@ -25,6 +25,7 @@ mapbox-search = "2.24.3"
 composables-icons = "2.2.1"
 
 haze = "2.0.0-alpha03"
+foundation = "1.11.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -82,6 +83,7 @@ coil = { module = "io.coil-kt:coil-compose", version = "2.7.0" }
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 haze-blur = { module = "dev.chrisbanes.haze:haze-blur", version.ref = "haze" }
 haze-materials = { module = "dev.chrisbanes.haze:haze-blur-materials", version.ref = "haze" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

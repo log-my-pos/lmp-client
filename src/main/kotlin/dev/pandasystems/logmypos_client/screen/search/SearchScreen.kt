@@ -16,7 +16,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,6 +35,7 @@ import dev.pandasystems.logmypos_client.models.location.LocationSearch
 import dev.pandasystems.logmypos_client.screen.main.MainScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
+import dev.pandasystems.logmypos_client.theme.Colors.backgroundSecondary
 import dev.pandasystems.logmypos_client.utils.SetupPreviewScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -54,26 +54,12 @@ class SearchScreen : Screen {
 		val searchState: TextFieldState = globalData.searchbarState
 
 		val navigator = LocalNavigator.currentOrThrow
-		val isPreview = LocalInspectionMode.current
 		val focusManager = LocalFocusManager.current
 		val keyboardController = LocalSoftwareKeyboardController.current
 		val searchFocusRequester = remember { FocusRequester() }
 		val coroutineScope = rememberCoroutineScope()
 
-		var suggestions by remember {
-			mutableStateOf(
-				if (!isPreview)
-					emptyList()
-				else
-					listOf(
-						LocationSearch.PREVIEW,
-						LocationSearch.PREVIEW,
-						LocationSearch.PREVIEW,
-						LocationSearch.PREVIEW,
-						LocationSearch.PREVIEW,
-					)
-			)
-		}
+		var suggestions by remember { mutableStateOf(emptyList<LocationSearch>()) }
 
 		LaunchedEffect(Unit) {
 			searchFocusRequester.requestFocus()
@@ -81,14 +67,7 @@ class SearchScreen : Screen {
 		}
 
 		LaunchedEffect(searchState.text.toString()) {
-			if (isPreview) return@LaunchedEffect
-
 			val query = searchState.text.toString().trim()
-			if (query.isBlank()) {
-				suggestions = emptyList()
-				return@LaunchedEffect
-			}
-
 			suggestions = locationService.queryLocations(query)
 		}
 
@@ -106,7 +85,7 @@ class SearchScreen : Screen {
 						.fillMaxWidth()
 						.padding(16.dp)
 						.focusRequester(searchFocusRequester),
-					backgroundColor = Color(0xFFE6E6E5),
+					backgroundColor = backgroundSecondary,
 					leftContent = {
 						IconButton(
 							modifier = Modifier

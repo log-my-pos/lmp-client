@@ -8,3 +8,9 @@ interface LocationData {
 	val address: Address?
 	val coordinate: Point
 }
+
+data class FakeLocationData(
+	override val name: String,
+	override val address: Address?,
+	override val coordinate: Point
+) : LocationData

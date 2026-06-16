@@ -10,8 +10,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import cafe.adriel.voyager.navigator.CurrentScreen
+import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.transitions.CrossfadeTransition
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
@@ -22,7 +23,6 @@ import dev.pandasystems.logmypos_client.models.GlobalData
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.screen.auth.LoginScreen
 import dev.pandasystems.logmypos_client.screen.location.LocationDetailScreen
-import dev.pandasystems.logmypos_client.screen.main.MainScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
 import dev.pandasystems.logmypos_client.utils.SetupPreview
@@ -35,6 +35,7 @@ fun AppPreview() = SetupPreview {
 	App()
 }
 
+@OptIn(ExperimentalVoyagerApi::class)
 @Composable
 fun App() {
 	val globalData: GlobalData = koinInject()
@@ -98,7 +99,7 @@ fun App() {
 					)
 
 					// Composite the current active screen
-					CurrentScreen()
+					CrossfadeTransition(navigator)
 				}
 			}
 		}

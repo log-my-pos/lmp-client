@@ -6,16 +6,14 @@ interface LocationSearch {
 	val distanceMeters: Double?
 	
 	suspend fun resolve(): LocationData
-	
-	companion object {
-		val PREVIEW = object : LocationSearch {
-			override val name: String = "Main Street"
-			override val formattedAddress: String = "123 Main Street"
-			override val distanceMeters: Double = 1234.0
+}
 
-			override suspend fun resolve(): LocationData {
-				throw IllegalStateException("Preview location search cannot be resolved")
-			}
-		}
+data class FakeLocationSearch(
+	override val name: String,
+	override val formattedAddress: String?,
+	override val distanceMeters: Double?
+) : LocationSearch {
+	override suspend fun resolve(): LocationData {
+		TODO("Not yet implemented")
 	}
 }

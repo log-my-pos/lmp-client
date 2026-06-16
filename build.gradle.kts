@@ -41,6 +41,7 @@ dependencies {
 
 	implementation(libs.androidx.room.runtime)
 	implementation(libs.androidx.room.ktx)
+	implementation(libs.androidx.foundation)
 	ksp(libs.androidx.room.compiler)
 
 	implementation(libs.kotlinx.datetime)
@@ -54,6 +55,7 @@ dependencies {
 
 	implementation(libs.voyager.navigator)
 	implementation(libs.voyager.screenModel)
+	implementation(libs.voyager.transitions)
 	implementation(libs.voyager.koin)
 
 	implementation(libs.mapbox.map.compose)

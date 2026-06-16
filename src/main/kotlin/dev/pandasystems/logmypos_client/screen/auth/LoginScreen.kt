@@ -2,14 +2,17 @@ package dev.pandasystems.logmypos_client.screen.auth
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -23,6 +26,7 @@ import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.screen.main.MainScreen
 import dev.pandasystems.logmypos_client.services.auth.AuthService
 import dev.pandasystems.logmypos_client.theme.Colors
+import dev.pandasystems.logmypos_client.theme.Colors.backgroundSecondary
 import dev.pandasystems.logmypos_client.utils.SetupPreviewScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -47,6 +51,8 @@ class LoginScreen : Screen {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Colors.background)
+                .imePadding()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -66,16 +72,7 @@ class LoginScreen : Screen {
                 color = Colors.text.copy(alpha = 0.5f),
                 textAlign = TextAlign.Center
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "(Hint: admin / password123)",
-                fontSize = 12.sp,
-                color = Colors.text.copy(alpha = 0.3f),
-                textAlign = TextAlign.Center
-            )
-
+            
             Spacer(modifier = Modifier.height(48.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -89,7 +86,7 @@ class LoginScreen : Screen {
                     state = usernameState,
                     placeholder = "Enter your username",
                     modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = Color(0xFFF0F0F0),
+                    backgroundColor = backgroundSecondary,
                     enabled = !isLoading
                 )
 
@@ -103,7 +100,7 @@ class LoginScreen : Screen {
                     state = passwordState,
                     placeholder = "Enter your password",
                     modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = Color(0xFFF0F0F0),
+                    backgroundColor = backgroundSecondary,
                     isPassword = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     enabled = !isLoading
