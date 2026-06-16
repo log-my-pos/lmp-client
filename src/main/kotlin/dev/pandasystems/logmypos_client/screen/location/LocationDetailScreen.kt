@@ -2,6 +2,8 @@ package dev.pandasystems.logmypos_client.screen.location
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -83,16 +85,25 @@ data class LocationDetailScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (currentEntry.imagePath != null) {
-                    AsyncImage(
-                        model = currentEntry.imagePath,
-                        contentDescription = "Location Photo",
+                if (currentEntry.imagePaths.isNotEmpty()) {
+                    LazyRow(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(250.dp)
-                            .clip(RoundedCornerShape(16.dp)),
-                        contentScale = ContentScale.Crop
-                    )
+                            .height(250.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(currentEntry.imagePaths) { path ->
+                            AsyncImage(
+                                model = path,
+                                contentDescription = "Location Photo",
+                                modifier = Modifier
+                                    .width(300.dp)
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(16.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
                 } else {
                     Box(
                         modifier = Modifier

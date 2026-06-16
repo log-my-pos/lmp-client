@@ -13,6 +13,6 @@ data class JournalEntry(
     val longitude: Double,
     val address: String?,
     val date: Long,
-    val imagePath: String?,
+    val imagePaths: List<String>,
     val isSynced: Boolean = false
 )

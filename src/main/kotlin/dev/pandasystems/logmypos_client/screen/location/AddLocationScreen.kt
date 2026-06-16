@@ -6,6 +6,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.*
@@ -25,9 +27,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil.compose.AsyncImage
 import com.composables.icons.tabler.Tabler
-import com.composables.icons.tabler.outline.ArrowLeft
-import com.composables.icons.tabler.outline.Camera
-import com.composables.icons.tabler.outline.MapPin
+import com.composables.icons.tabler.outline.*
 import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.data.JournalEntry
 import dev.pandasystems.logmypos_client.models.location.LocationData
@@ -49,7 +49,7 @@ data class AddLocationScreen(
 	val latitude: Double,
 	val longitude: Double,
 	val entryId: Long? = null,
-	val initialImageUri: String? = null
+	val initialImageUris: List<String> = emptyList()
 ) : Screen {
 	@Composable
 	override fun Content() {
@@ -59,16 +59,16 @@ data class AddLocationScreen(
 		val descriptionState = rememberTextFieldState()
 
 		var location by remember { mutableStateOf<LocationData?>(null) }
-		var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(initialImageUri?.let { android.net.Uri.parse(it) }) }
-		var existingImagePath by remember { mutableStateOf<String?>(null) }
+		var selectedImageUris by remember { mutableStateOf<List<android.net.Uri>>(initialImageUris.map { android.net.Uri.parse(it) }) }
+		var existingImagePaths by remember { mutableStateOf<List<String>>(emptyList()) }
 		val context = LocalContext.current
 		val scope = rememberCoroutineScope()
 
 		val navigator = LocalNavigator.currentOrThrow
 
 		val photoPickerLauncher = rememberLauncherForActivityResult(
-			contract = ActivityResultContracts.PickVisualMedia(),
-			onResult = { uri -> selectedImageUri = uri }
+			contract = ActivityResultContracts.PickMultipleVisualMedia(),
+			onResult = { uris -> selectedImageUris = selectedImageUris + uris }
 		)
 
 		LaunchedEffect(entryId) {
@@ -80,7 +80,7 @@ data class AddLocationScreen(
 					descriptionState.edit {
 						replace(0, length, entry.description)
 					}
-					existingImagePath = entry.imagePath
+					existingImagePaths = entry.imagePaths
 				}
 			}
 		}
@@ -111,34 +111,67 @@ data class AddLocationScreen(
 				verticalArrangement = Arrangement.spacedBy(16.dp)
 			) {
 				// Photo Picker Placeholder
-				Box(
-					modifier = Modifier
-						.fillMaxWidth()
-						.height(200.dp)
-						.clip(RoundedCornerShape(16.dp))
-						.background(Color(0xFFF0F0F0))
-						.clickable {
-							photoPickerLauncher.launch(
-								PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-							)
-						},
-					contentAlignment = Alignment.Center
-				) {
-					if (selectedImageUri != null) {
-						AsyncImage(
-							model = selectedImageUri,
-							contentDescription = "Selected image",
+				if (selectedImageUris.isNotEmpty() || existingImagePaths.isNotEmpty()) {
+					Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
+						LazyRow(
 							modifier = Modifier.fillMaxSize(),
-							contentScale = ContentScale.Crop
-						)
-					} else if (existingImagePath != null) {
-						AsyncImage(
-							model = existingImagePath,
-							contentDescription = "Existing image",
-							modifier = Modifier.fillMaxSize(),
-							contentScale = ContentScale.Crop
-						)
-					} else {
+							horizontalArrangement = Arrangement.spacedBy(8.dp)
+						) {
+							items(existingImagePaths) { path ->
+								AsyncImage(
+									model = path,
+									contentDescription = null,
+									modifier = Modifier
+										.width(150.dp)
+										.fillMaxHeight()
+										.clip(RoundedCornerShape(16.dp)),
+									contentScale = ContentScale.Crop
+								)
+							}
+							items(selectedImageUris) { uri ->
+								AsyncImage(
+									model = uri,
+									contentDescription = null,
+									modifier = Modifier
+										.width(150.dp)
+										.fillMaxHeight()
+										.clip(RoundedCornerShape(16.dp)),
+									contentScale = ContentScale.Crop
+								)
+							}
+							item {
+								Box(
+									modifier = Modifier
+										.width(150.dp)
+										.fillMaxHeight()
+										.clip(RoundedCornerShape(16.dp))
+										.background(Color(0xFFF0F0F0))
+										.clickable {
+											photoPickerLauncher.launch(
+												PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+											)
+										},
+									contentAlignment = Alignment.Center
+								) {
+									Icon(Tabler.Outline.Plus, contentDescription = "Add more", tint = Color.Gray)
+								}
+							}
+						}
+					}
+				} else {
+					Box(
+						modifier = Modifier
+							.fillMaxWidth()
+							.height(200.dp)
+							.clip(RoundedCornerShape(16.dp))
+							.background(Color(0xFFF0F0F0))
+							.clickable {
+								photoPickerLauncher.launch(
+									PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+								)
+							},
+						contentAlignment = Alignment.Center
+					) {
 						Column(horizontalAlignment = Alignment.CenterHorizontally) {
 							Icon(
 								imageVector = Tabler.Outline.Camera,
@@ -208,10 +241,11 @@ data class AddLocationScreen(
 				Button(
 					onClick = {
 						scope.launch {
-							val imagePath = selectedImageUri?.let { uri ->
+							val newImagePaths = selectedImageUris.mapNotNull { uri ->
 								saveImageToInternalStorage(context, uri)
-							} ?: existingImagePath
-
+							}
+							val allImagePaths = existingImagePaths + newImagePaths
+							
 							val entry = JournalEntry(
 								id = entryId ?: 0L,
 								title = titleState.text.toString(),
@@ -220,7 +254,7 @@ data class AddLocationScreen(
 								longitude = longitude,
 								address = location?.address?.formattedAddress ?: location?.name,
 								date = Clock.System.now().toEpochMilliseconds(),
-								imagePath = imagePath
+								imagePaths = allImagePaths
 							)
 
 							if (entryId == null) {
@@ -228,6 +262,7 @@ data class AddLocationScreen(
 							} else {
 								repository.update(entry)
 							}
+							locationService.clearSelection()
 							navigator.pop()
 						}
 					},

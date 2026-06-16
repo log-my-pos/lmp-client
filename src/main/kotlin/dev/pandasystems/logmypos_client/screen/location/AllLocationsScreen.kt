@@ -124,9 +124,9 @@ class AllLocationsScreen : Screen {
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (entry.imagePath != null) {
+                if (entry.imagePaths.isNotEmpty()) {
                     AsyncImage(
-                        model = entry.imagePath,
+                        model = entry.imagePaths.first(),
                         contentDescription = null,
                         modifier = Modifier
                             .size(60.dp)

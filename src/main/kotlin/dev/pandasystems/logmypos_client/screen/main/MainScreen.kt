@@ -72,39 +72,41 @@ class MainScreen : Screen {
 					try {
 						fusedLocationClient.lastLocation.addOnSuccessListener { location ->
 							if (location != null) {
-								navigator.push(AddLocationScreen(location.latitude, location.longitude, initialImageUri = photoUri.toString()))
+								navigator.push(AddLocationScreen(location.latitude, location.longitude, initialImageUris = listOf(photoUri.toString())))
 							} else {
 								// Fallback to 0,0 or show error
-								navigator.push(AddLocationScreen(0.0, 0.0, initialImageUri = photoUri.toString()))
+								navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = listOf(photoUri.toString())))
 							}
 						}
 					} catch (e: SecurityException) {
-						navigator.push(AddLocationScreen(0.0, 0.0, initialImageUri = photoUri.toString()))
+						navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = listOf(photoUri.toString())))
 					}
 				}
 			}
 		)
 
 		val pickerLauncher = rememberLauncherForActivityResult(
-			contract = ActivityResultContracts.PickVisualMedia(),
-			onResult = { uri ->
-				if (uri != null) {
-					val coords = getExifLatLong(context, uri)
+			contract = ActivityResultContracts.PickMultipleVisualMedia(),
+			onResult = { uris ->
+				if (uris.isNotEmpty()) {
+					val firstUri = uris.first()
+					val coords = getExifLatLong(context, firstUri)
+					val allUris = uris.map { it.toString() }
 					if (coords != null) {
-						navigator.push(AddLocationScreen(coords.first, coords.second, initialImageUri = uri.toString()))
+						navigator.push(AddLocationScreen(coords.first, coords.second, initialImageUris = allUris))
 					} else {
 						// Fallback to current location or 0,0
 						val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 						try {
 							fusedLocationClient.lastLocation.addOnSuccessListener { location ->
 								if (location != null) {
-									navigator.push(AddLocationScreen(location.latitude, location.longitude, initialImageUri = uri.toString()))
+									navigator.push(AddLocationScreen(location.latitude, location.longitude, initialImageUris = allUris))
 								} else {
-									navigator.push(AddLocationScreen(0.0, 0.0, initialImageUri = uri.toString()))
+									navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = allUris))
 								}
 							}
 						} catch (e: SecurityException) {
-							navigator.push(AddLocationScreen(0.0, 0.0, initialImageUri = uri.toString()))
+							navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = allUris))
 						}
 					}
 				}
