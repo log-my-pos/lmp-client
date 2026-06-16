@@ -22,18 +22,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.work.*
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil.compose.AsyncImage
 import com.composables.icons.tabler.Tabler
-import com.composables.icons.tabler.outline.*
+import com.composables.icons.tabler.outline.ArrowLeft
+import com.composables.icons.tabler.outline.Camera
+import com.composables.icons.tabler.outline.MapPin
+import com.composables.icons.tabler.outline.Plus
 import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.data.JournalEntry
 import dev.pandasystems.logmypos_client.models.location.LocationData
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.utils.SetupPreviewScreen
+import dev.pandasystems.logmypos_client.worker.SyncWorker
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.io.File
@@ -55,6 +60,9 @@ data class AddLocationScreen(
 	override fun Content() {
 		val locationService: LocationService = koinInject()
 		val repository: JournalRepository = koinInject()
+        val locationApiService: dev.pandasystems.logmypos_client.api.LocationApiService = koinInject()
+        val authService: dev.pandasystems.logmypos_client.services.auth.AuthService = koinInject()
+        val isLoggedIn by authService.isLoggedIn.collectAsState()
 		val titleState = rememberTextFieldState()
 		val descriptionState = rememberTextFieldState()
 
@@ -105,14 +113,16 @@ data class AddLocationScreen(
 		) { padding ->
 			Column(
 				modifier = Modifier
-					.fillMaxSize()
-					.padding(padding)
-					.padding(16.dp),
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
 				verticalArrangement = Arrangement.spacedBy(16.dp)
 			) {
 				// Photo Picker Placeholder
 				if (selectedImageUris.isNotEmpty() || existingImagePaths.isNotEmpty()) {
-					Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
+					Box(modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)) {
 						LazyRow(
 							modifier = Modifier.fillMaxSize(),
 							horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -122,9 +132,9 @@ data class AddLocationScreen(
 									model = path,
 									contentDescription = null,
 									modifier = Modifier
-										.width(150.dp)
-										.fillMaxHeight()
-										.clip(RoundedCornerShape(16.dp)),
+                                        .width(150.dp)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(16.dp)),
 									contentScale = ContentScale.Crop
 								)
 							}
@@ -133,24 +143,24 @@ data class AddLocationScreen(
 									model = uri,
 									contentDescription = null,
 									modifier = Modifier
-										.width(150.dp)
-										.fillMaxHeight()
-										.clip(RoundedCornerShape(16.dp)),
+                                        .width(150.dp)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(16.dp)),
 									contentScale = ContentScale.Crop
 								)
 							}
 							item {
 								Box(
 									modifier = Modifier
-										.width(150.dp)
-										.fillMaxHeight()
-										.clip(RoundedCornerShape(16.dp))
-										.background(Color(0xFFF0F0F0))
-										.clickable {
-											photoPickerLauncher.launch(
-												PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-											)
-										},
+                                        .width(150.dp)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(Color(0xFFF0F0F0))
+                                        .clickable {
+                                            photoPickerLauncher.launch(
+                                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                            )
+                                        },
 									contentAlignment = Alignment.Center
 								) {
 									Icon(Tabler.Outline.Plus, contentDescription = "Add more", tint = Color.Gray)
@@ -161,15 +171,15 @@ data class AddLocationScreen(
 				} else {
 					Box(
 						modifier = Modifier
-							.fillMaxWidth()
-							.height(200.dp)
-							.clip(RoundedCornerShape(16.dp))
-							.background(Color(0xFFF0F0F0))
-							.clickable {
-								photoPickerLauncher.launch(
-									PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-								)
-							},
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFFF0F0F0))
+                            .clickable {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
 						contentAlignment = Alignment.Center
 					) {
 						Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -230,8 +240,8 @@ data class AddLocationScreen(
 					state = descriptionState,
 					placeholder = "What happened here?",
 					modifier = Modifier
-						.fillMaxWidth()
-						.heightIn(min = 100.dp),
+                        .fillMaxWidth()
+                        .heightIn(min = 100.dp),
 					backgroundColor = Color(0xFFF0F0F0),
 					shape = RoundedCornerShape(16.dp)
 				)
@@ -245,7 +255,18 @@ data class AddLocationScreen(
 								saveImageToInternalStorage(context, uri)
 							}
 							val allImagePaths = existingImagePaths + newImagePaths
-							
+
+                            var synced = false
+                            if (isLoggedIn) {
+                                val response = locationApiService.createLocation(
+                                    title = titleState.text.toString(),
+                                    description = descriptionState.text.toString(),
+                                    latitude = latitude,
+                                    longitude = longitude
+                                )
+                                synced = response != null
+                            }
+
 							val entry = JournalEntry(
 								id = entryId ?: 0L,
 								title = titleState.text.toString(),
@@ -254,7 +275,8 @@ data class AddLocationScreen(
 								longitude = longitude,
 								address = location?.address?.formattedAddress ?: location?.name,
 								date = Clock.System.now().toEpochMilliseconds(),
-								imagePaths = allImagePaths
+                                imagePaths = allImagePaths,
+                                isSynced = synced
 							)
 
 							if (entryId == null) {
@@ -262,6 +284,11 @@ data class AddLocationScreen(
 							} else {
 								repository.update(entry)
 							}
+
+                            if (isLoggedIn && !synced) {
+                                triggerSync(context)
+                            }
+
 							locationService.clearSelection()
 							navigator.pop()
 						}
@@ -275,6 +302,22 @@ data class AddLocationScreen(
 			}
 		}
 	}
+
+    private fun triggerSync(context: android.content.Context) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "LocationSync",
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            syncRequest
+        )
+    }
 
 	private fun saveImageToInternalStorage(context: android.content.Context, uri: android.net.Uri): String? {
 		return try {

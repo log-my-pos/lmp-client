@@ -1,7 +1,6 @@
 package dev.pandasystems.logmypos_client.repository
 
 import dev.pandasystems.logmypos_client.data.JournalEntry
-import dev.pandasystems.logmypos_client.data.JournalEntryDao
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
@@ -18,5 +17,7 @@ class FakeJournalRepositoryImpl : JournalRepository {
 
 	override suspend fun update(entry: JournalEntry) {}
 
-	override suspend fun delete(entry: JournalEntry) {}
+    override suspend fun delete(entry: JournalEntry) {}
+
+    override suspend fun getUnsyncedEntries(): List<JournalEntry> = emptyList()
 }

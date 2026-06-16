@@ -75,6 +75,15 @@ dependencies {
 	implementation(libs.androidx.exifinterface)
 	implementation(libs.play.services.location)
 
+	implementation(libs.ktor.client.core)
+	implementation(libs.ktor.client.android)
+	implementation(libs.ktor.client.content.negotiation)
+	implementation(libs.ktor.serialization.kotlinx.json)
+	implementation(libs.ktor.client.logging)
+	implementation(libs.ktor.client.auth)
+	implementation(libs.androidx.datastore.preferences)
+	implementation(libs.androidx.work.runtime.ktx)
+
 	implementation(libs.haze)
 	implementation(libs.haze.blur)
 	implementation(libs.haze.materials)

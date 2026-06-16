@@ -1,7 +1,6 @@
 package dev.pandasystems.logmypos_client.repository
 
 import dev.pandasystems.logmypos_client.data.JournalEntry
-import dev.pandasystems.logmypos_client.data.JournalEntryDao
 import kotlinx.coroutines.flow.Flow
 
 interface JournalRepository {
@@ -14,4 +13,6 @@ interface JournalRepository {
     suspend fun update(entry: JournalEntry)
 
     suspend fun delete(entry: JournalEntry)
+
+    suspend fun getUnsyncedEntries(): List<JournalEntry>
 }

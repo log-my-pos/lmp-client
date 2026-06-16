@@ -22,4 +22,8 @@ class JournalRepositoryImpl(private val journalEntryDao: JournalEntryDao) : Jour
     override suspend fun delete(entry: JournalEntry) {
         journalEntryDao.deleteEntry(entry)
     }
+
+    override suspend fun getUnsyncedEntries(): List<JournalEntry> {
+        return journalEntryDao.getUnsyncedEntries()
+    }
 }
