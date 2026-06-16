@@ -18,7 +18,6 @@ import org.koin.plugin.module.dsl.single
 val appModule = module {
 	single { AppDatabase.getDatabase(androidContext()) }
 	single { JournalRepositoryImpl(get<AppDatabase>().journalEntryDao()) } bind JournalRepository::class
-	
 	single<LocationServiceImpl>() bind LocationService::class
 
 	single<GlobalData>() bind GlobalData::class
