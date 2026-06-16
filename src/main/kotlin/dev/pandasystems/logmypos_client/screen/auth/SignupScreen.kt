@@ -32,9 +32,9 @@ import org.koin.compose.koinInject
 
 @Preview
 @Composable
-private fun PreviewLoginScreen() = SetupPreviewScreen(LoginScreen())
+private fun PreviewSignupScreen() = SetupPreviewScreen(SignupScreen())
 
-class LoginScreen : Screen {
+class SignupScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -42,6 +42,7 @@ class LoginScreen : Screen {
         val scope = rememberCoroutineScope()
 
         val usernameState = rememberTextFieldState()
+        val emailState = rememberTextFieldState()
         val passwordState = rememberTextFieldState()
         var isLoading by remember { mutableStateOf(false) }
         var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -57,21 +58,21 @@ class LoginScreen : Screen {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Welcome to LogMyPos",
+                text = "Join LogMyPos",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Colors.text
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
-                text = "Login is optional, but required for cloud sync in the future.",
+                text = "Create an account to keep your memories safe in the cloud.",
                 fontSize = 16.sp,
                 color = Colors.text.copy(alpha = 0.5f),
                 textAlign = TextAlign.Center
             )
-            
+
             Spacer(modifier = Modifier.height(48.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -83,9 +84,24 @@ class LoginScreen : Screen {
                 )
                 InputField(
                     state = usernameState,
-                    placeholder = "Enter your username",
+                    placeholder = "Pick a username",
                     modifier = Modifier.fillMaxWidth(),
                     backgroundColor = backgroundSecondary,
+                    enabled = !isLoading
+                )
+
+                Text(
+                    text = "Email",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Colors.text
+                )
+                InputField(
+                    state = emailState,
+                    placeholder = "Enter your email",
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = backgroundSecondary,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     enabled = !isLoading
                 )
 
@@ -97,7 +113,7 @@ class LoginScreen : Screen {
                 )
                 InputField(
                     state = passwordState,
-                    placeholder = "Enter your password",
+                    placeholder = "Create a password",
                     modifier = Modifier.fillMaxWidth(),
                     backgroundColor = backgroundSecondary,
                     isPassword = true,
@@ -120,18 +136,24 @@ class LoginScreen : Screen {
 
             Button(
                 onClick = {
+                    val username = usernameState.text.toString()
+                    val email = emailState.text.toString()
+                    val password = passwordState.text.toString()
+
+                    if (username.isBlank() || email.isBlank() || password.isBlank()) {
+                        errorMessage = "Please fill in all fields"
+                        return@Button
+                    }
+
                     scope.launch {
                         isLoading = true
                         errorMessage = null
-                        val success = authService.login(
-                            usernameState.text.toString(),
-                            passwordState.text.toString()
-                        )
+                        val success = authService.signup(username, email, password)
                         isLoading = false
                         if (success) {
                             navigator.replaceAll(MainScreen())
                         } else {
-                            errorMessage = "Invalid username or password"
+                            errorMessage = "Signup failed. Please try again."
                         }
                     }
                 },
@@ -151,7 +173,7 @@ class LoginScreen : Screen {
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text("Sign Up", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -159,41 +181,24 @@ class LoginScreen : Screen {
 
             TextButton(
                 onClick = {
-                    navigator.push(SignupScreen())
+                    navigator.pop()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading
             ) {
                 Row {
                     Text(
-                        "Don't have an account? ",
+                        "Already have an account? ",
                         color = Colors.text.copy(alpha = 0.5f),
                         fontSize = 16.sp
                     )
                     Text(
-                        "Sign Up",
+                        "Login",
                         color = Colors.text,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TextButton(
-                onClick = {
-                    navigator.replaceAll(MainScreen())
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
-            ) {
-                Text(
-                    "Skip for now",
-                    color = Colors.text,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
             }
         }
     }

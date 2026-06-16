@@ -1,13 +1,15 @@
 package dev.pandasystems.logmypos_client.screen.main
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.provider.MediaStore
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +18,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
@@ -34,6 +35,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.*
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.models.GlobalData
 import dev.pandasystems.logmypos_client.screen.auth.LoginScreen
@@ -64,29 +67,60 @@ class MainScreen : Screen {
 		var showFabMenu by remember { mutableStateOf(false) }
 		var photoUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
+		val navigateWithLocation = { uris: List<String> ->
+			val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+			if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+				context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+			) {
+				navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = uris))
+			} else {
+				try {
+					fusedLocationClient.lastLocation.addOnCompleteListener { task ->
+						val location = if (task.isSuccessful) task.result else null
+						if (location != null) {
+							navigator.push(
+								AddLocationScreen(
+									location.latitude,
+									location.longitude,
+									initialImageUris = uris
+								)
+							)
+						} else {
+							val cts = CancellationTokenSource()
+							fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cts.token)
+								.addOnCompleteListener { currentTask ->
+									val currentLocation = if (currentTask.isSuccessful) currentTask.result else null
+									if (currentLocation != null) {
+										navigator.push(
+											AddLocationScreen(
+												currentLocation.latitude,
+												currentLocation.longitude,
+												initialImageUris = uris
+											)
+										)
+									} else {
+										navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = uris))
+									}
+								}
+						}
+					}
+				} catch (e: SecurityException) {
+					navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = uris))
+				}
+			}
+		}
+
 		val cameraLauncher = rememberLauncherForActivityResult(
 			contract = ActivityResultContracts.TakePicture(),
 			onResult = { success ->
 				if (success && photoUri != null) {
-					val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-					try {
-						fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-							if (location != null) {
-								navigator.push(AddLocationScreen(location.latitude, location.longitude, initialImageUris = listOf(photoUri.toString())))
-							} else {
-								// Fallback to 0,0 or show error
-								navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = listOf(photoUri.toString())))
-							}
-						}
-					} catch (e: SecurityException) {
-						navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = listOf(photoUri.toString())))
-					}
+					navigateWithLocation(listOf(photoUri.toString()))
 				}
 			}
 		)
 
 		val pickerLauncher = rememberLauncherForActivityResult(
-			contract = ActivityResultContracts.PickMultipleVisualMedia(),
+			contract = ActivityResultContracts.GetMultipleContents(),
 			onResult = { uris ->
 				if (uris.isNotEmpty()) {
 					val firstUri = uris.first()
@@ -95,21 +129,28 @@ class MainScreen : Screen {
 					if (coords != null) {
 						navigator.push(AddLocationScreen(coords.first, coords.second, initialImageUris = allUris))
 					} else {
-						// Fallback to current location or 0,0
-						val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-						try {
-							fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-								if (location != null) {
-									navigator.push(AddLocationScreen(location.latitude, location.longitude, initialImageUris = allUris))
-								} else {
-									navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = allUris))
-								}
-							}
-						} catch (e: SecurityException) {
-							navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = allUris))
-						}
+						navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = allUris))
 					}
 				}
+			}
+		)
+
+		val takePhotoPermissionLauncher = rememberLauncherForActivityResult(
+			contract = ActivityResultContracts.RequestMultiplePermissions(),
+			onResult = { permissions ->
+				if (permissions[Manifest.permission.CAMERA] == true) {
+					val photoFile = File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
+					val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
+					photoUri = uri
+					cameraLauncher.launch(uri)
+				}
+			}
+		)
+
+		val uploadPhotoPermissionLauncher = rememberLauncherForActivityResult(
+			contract = ActivityResultContracts.RequestMultiplePermissions(),
+			onResult = { _ ->
+				pickerLauncher.launch("image/*")
 			}
 		)
 
@@ -157,9 +198,30 @@ class MainScreen : Screen {
 								label = "Take Photo",
 								onClick = {
 									showFabMenu = false
-									val photoFile = File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
-									photoUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
-									cameraLauncher.launch(photoUri!!)
+									val hasCameraPermission =
+										context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+									val hasLocationPermission =
+										context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+												context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+									if (hasCameraPermission && hasLocationPermission) {
+										val photoFile =
+											File(context.cacheDir, "temp_photo_${System.currentTimeMillis()}.jpg")
+										photoUri = FileProvider.getUriForFile(
+											context,
+											"${context.packageName}.fileprovider",
+											photoFile
+										)
+										cameraLauncher.launch(photoUri!!)
+									} else {
+										takePhotoPermissionLauncher.launch(
+											arrayOf(
+												Manifest.permission.CAMERA,
+												Manifest.permission.ACCESS_FINE_LOCATION,
+												Manifest.permission.ACCESS_COARSE_LOCATION
+											)
+										)
+									}
 								}
 							)
 							SmallFab(
@@ -167,7 +229,39 @@ class MainScreen : Screen {
 								label = "Upload Photo",
 								onClick = {
 									showFabMenu = false
-									pickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+									val hasLocationPermission =
+										context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+												context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+									val hasMediaLocationPermission =
+										if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+											context.checkSelfPermission(Manifest.permission.ACCESS_MEDIA_LOCATION) == PackageManager.PERMISSION_GRANTED
+										} else true
+
+									val hasStoragePermission =
+										if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+											context.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
+										} else {
+											context.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+										}
+
+									if (hasLocationPermission && hasMediaLocationPermission && hasStoragePermission) {
+										pickerLauncher.launch("image/*")
+									} else {
+										val permissions = mutableListOf(
+											Manifest.permission.ACCESS_FINE_LOCATION,
+											Manifest.permission.ACCESS_COARSE_LOCATION
+										)
+										if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+											permissions.add(Manifest.permission.ACCESS_MEDIA_LOCATION)
+										}
+										if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+											permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+										} else {
+											permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+										}
+										uploadPhotoPermissionLauncher.launch(permissions.toTypedArray())
+									}
 								}
 							)
 						}
@@ -222,13 +316,29 @@ class MainScreen : Screen {
 
 	private fun getExifLatLong(context: android.content.Context, uri: android.net.Uri): Pair<Double, Double>? {
 		return try {
-			context.contentResolver.openInputStream(uri)?.use { inputStream ->
+			val photoUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+				try {
+					MediaStore.setRequireOriginal(uri)
+				} catch (e: Exception) {
+					uri
+				}
+			} else {
+				uri
+			}
+			// Try FileDescriptor first as it is more reliable for ExifInterface
+			val coords = context.contentResolver.openFileDescriptor(photoUri, "r")?.use { pfd ->
+				val exif = ExifInterface(pfd.fileDescriptor)
+				exif.latLong?.let {
+					Pair(it[0], it[1])
+				}
+			}
+			if (coords != null) return coords
+
+			// Fallback to InputStream
+			context.contentResolver.openInputStream(photoUri)?.use { inputStream ->
 				val exif = ExifInterface(inputStream)
-				val latLong = FloatArray(2)
-				if (exif.getLatLong(latLong)) {
-					Pair(latLong[0].toDouble(), latLong[1].toDouble())
-				} else {
-					null
+				exif.latLong?.let {
+					Pair(it[0], it[1])
 				}
 			}
 		} catch (e: Exception) {

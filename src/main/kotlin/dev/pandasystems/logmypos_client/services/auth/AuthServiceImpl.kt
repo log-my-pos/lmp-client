@@ -22,6 +22,15 @@ class AuthServiceImpl : AuthService {
         }
     }
 
+    override suspend fun signup(username: String, email: String, password: String): Boolean {
+        // Simulate API call delay
+        delay(1500.milliseconds)
+
+        // Always succeed for simulation
+        _isLoggedIn.value = true
+        return true
+    }
+
     override fun logout() {
         _isLoggedIn.value = false
     }
