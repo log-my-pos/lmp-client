@@ -3,21 +3,26 @@ package dev.pandasystems.logmypos_client.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.tabler.Tabler
+import com.composables.icons.tabler.outline.Eye
+import com.composables.icons.tabler.outline.EyeOff
 import com.composables.icons.tabler.outline.Search
 import com.composables.icons.tabler.outline.User
 import dev.pandasystems.logmypos_client.theme.Colors
@@ -29,6 +34,12 @@ private fun PreviewComposite() {
 		InputField(
 			modifier = Modifier.fillMaxWidth(),
 			placeholder = "Placeholder"
+		)
+
+		InputField(
+			modifier = Modifier.fillMaxWidth(),
+			placeholder = "Password",
+			isPassword = true
 		)
 
 		InputField(
@@ -83,6 +94,7 @@ fun InputField(
 	state: TextFieldState = rememberTextFieldState(),
 	enabled: Boolean = true,
 	readOnly: Boolean = false,
+	isPassword: Boolean = false,
 	shape: Shape = CircleShape,
 	horizontalPadding: Dp = 16.dp,
 	verticalPadding: Dp = 8.dp,
@@ -93,7 +105,10 @@ fun InputField(
 	placeholder: String? = null,
 	placeholderTextStyle: TextStyle = textStyle.copy(color = Colors.textPlaceholder),
 	backgroundColor: Color = Colors.background,
+	keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
+	var passwordVisible by remember { mutableStateOf(false) }
+
 	BasicTextField(
 		modifier = modifier,
 		state = state,
@@ -101,6 +116,14 @@ fun InputField(
 		readOnly = readOnly,
 		lineLimits = TextFieldLineLimits.SingleLine,
 		textStyle = textStyle,
+		keyboardOptions = keyboardOptions,
+		outputTransformation = if (isPassword && !passwordVisible) {
+			OutputTransformation {
+				for (i in 0 until length) {
+					replace(i, i + 1, "•")
+				}
+			}
+		} else null,
 		decorator = { innerDecoration ->
 			Surface(
 				shape = shape,
@@ -133,7 +156,26 @@ fun InputField(
 						innerDecoration()
 					}
 
-					rightContent?.invoke()
+					Row(verticalAlignment = Alignment.CenterVertically) {
+						if (isPassword) {
+							IconButton(
+								modifier = Modifier
+									.padding(4.dp)
+									.size(36.dp),
+								onClick = { passwordVisible = !passwordVisible },
+								colors = IconButtonDefaults.iconButtonColors(contentColor = Colors.text)
+							) {
+								Icon(
+									imageVector = if (passwordVisible) Tabler.Outline.EyeOff else Tabler.Outline.Eye,
+									contentDescription = if (passwordVisible) "Hide password" else "Show password",
+									modifier = Modifier
+										.fillMaxSize()
+										.padding(6.dp)
+								)
+							}
+						}
+						rightContent?.invoke()
+					}
 				}
 			}
 		}

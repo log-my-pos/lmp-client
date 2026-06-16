@@ -20,6 +20,7 @@ import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import dev.pandasystems.logmypos_client.models.GlobalData
 import dev.pandasystems.logmypos_client.repository.JournalRepository
+import dev.pandasystems.logmypos_client.screen.auth.LoginScreen
 import dev.pandasystems.logmypos_client.screen.location.LocationDetailScreen
 import dev.pandasystems.logmypos_client.screen.main.MainScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
@@ -47,7 +48,7 @@ fun App() {
 		typography = hankenGroteskTypography
 	) {
 		Surface(modifier = Modifier.fillMaxSize()) {
-			Navigator(MainScreen()) { navigator ->
+			Navigator(LoginScreen()) { navigator ->
 				Box(Modifier.fillMaxSize()) {
 					MapboxMap(
 						Modifier.fillMaxSize(),

@@ -5,6 +5,8 @@ import dev.pandasystems.logmypos_client.models.GlobalData
 import dev.pandasystems.logmypos_client.repository.FakeJournalRepositoryImpl
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.repository.JournalRepositoryImpl
+import dev.pandasystems.logmypos_client.services.auth.AuthService
+import dev.pandasystems.logmypos_client.services.auth.AuthServiceImpl
 import dev.pandasystems.logmypos_client.services.location.FakeLocationServiceImpl
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.services.location.LocationServiceImpl
@@ -20,6 +22,7 @@ val appModule = module {
 	single<LocationServiceImpl>() bind LocationService::class
 
 	single<GlobalData>() bind GlobalData::class
+	single<AuthServiceImpl>() bind AuthService::class
 }
 
 val previewModule = module {
@@ -27,4 +30,5 @@ val previewModule = module {
 	single<FakeLocationServiceImpl>() bind LocationService::class
 
 	single<GlobalData>() bind GlobalData::class
+	single<AuthServiceImpl>() bind AuthService::class
 }
