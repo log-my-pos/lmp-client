@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,30 +18,35 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil.compose.AsyncImage
 import com.composables.icons.tabler.Tabler
-import com.composables.icons.tabler.outline.ArrowLeft
-import com.composables.icons.tabler.outline.MapPin
+import com.composables.icons.tabler.outline.*
+import dev.pandasystems.logmypos_client.data.JournalEntry
+import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.utils.SetupPreviewScreen
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @Preview
 @Composable
 private fun PreviewLocationDetailScreen() = SetupPreviewScreen(
-    LocationDetailScreen(
-        name = "Location Name",
-        description = "Location Description",
-        address = "123 Main St"
-    )
+    LocationDetailScreen(0L)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 data class LocationDetailScreen(
-    val name: String,
-    val description: String,
-    val address: String,
-    val imagePath: String? = null
+    val entryId: Long
 ) : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val repository = koinInject<JournalRepository>()
+        val scope = rememberCoroutineScope()
+        var entry by remember { mutableStateOf<JournalEntry?>(null) }
+
+        LaunchedEffect(entryId) {
+            entry = repository.getEntryById(entryId)
+        }
+
+        val currentEntry = entry ?: return
 
         Scaffold(
             topBar = {
@@ -51,6 +56,21 @@ data class LocationDetailScreen(
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
                             Icon(Tabler.Outline.ArrowLeft, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            navigator.push(AddLocationScreen(currentEntry.latitude, currentEntry.longitude, currentEntry.id))
+                        }) {
+                            Icon(Tabler.Outline.Edit, contentDescription = "Edit")
+                        }
+                        IconButton(onClick = {
+                            scope.launch {
+                                repository.delete(currentEntry)
+                                navigator.pop()
+                            }
+                        }) {
+                            Icon(Tabler.Outline.Trash, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 )
@@ -63,9 +83,9 @@ data class LocationDetailScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (imagePath != null) {
+                if (currentEntry.imagePath != null) {
                     AsyncImage(
-                        model = imagePath,
+                        model = currentEntry.imagePath,
                         contentDescription = "Location Photo",
                         modifier = Modifier
                             .fillMaxWidth()
@@ -99,7 +119,7 @@ data class LocationDetailScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = name,
+                            text = currentEntry.title,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -116,7 +136,7 @@ data class LocationDetailScreen(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = address,
+                                text = currentEntry.address ?: "",
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -131,7 +151,7 @@ data class LocationDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = description,
+                            text = currentEntry.description,
                             fontSize = 16.sp,
                             lineHeight = 22.sp
                         )

@@ -45,7 +45,12 @@ import kotlin.time.Clock
 private fun PreviewAddLocationScreen() = SetupPreviewScreen(AddLocationScreen(latitude = 0.0, longitude = 0.0))
 
 @OptIn(ExperimentalMaterial3Api::class)
-data class AddLocationScreen(val latitude: Double, val longitude: Double) : Screen {
+data class AddLocationScreen(
+	val latitude: Double,
+	val longitude: Double,
+	val entryId: Long? = null,
+	val initialImageUri: String? = null
+) : Screen {
 	@Composable
 	override fun Content() {
 		val locationService: LocationService = koinInject()
@@ -54,7 +59,8 @@ data class AddLocationScreen(val latitude: Double, val longitude: Double) : Scre
 		val descriptionState = rememberTextFieldState()
 
 		var location by remember { mutableStateOf<LocationData?>(null) }
-		var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+		var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(initialImageUri?.let { android.net.Uri.parse(it) }) }
+		var existingImagePath by remember { mutableStateOf<String?>(null) }
 		val context = LocalContext.current
 		val scope = rememberCoroutineScope()
 
@@ -65,6 +71,20 @@ data class AddLocationScreen(val latitude: Double, val longitude: Double) : Scre
 			onResult = { uri -> selectedImageUri = uri }
 		)
 
+		LaunchedEffect(entryId) {
+			if (entryId != null) {
+				repository.getEntryById(entryId)?.let { entry ->
+					titleState.edit {
+						replace(0, length, entry.title)
+					}
+					descriptionState.edit {
+						replace(0, length, entry.description)
+					}
+					existingImagePath = entry.imagePath
+				}
+			}
+		}
+
 		LaunchedEffect(Unit) {
 			location = locationService.findLocations(longitude, latitude)
 				.firstOrNull()?.resolve()
@@ -74,7 +94,7 @@ data class AddLocationScreen(val latitude: Double, val longitude: Double) : Scre
 			topBar = {
 				OptIn(ExperimentalMaterial3Api::class)
 				TopAppBar(
-					title = { Text("Add Entry") },
+					title = { Text(if (entryId == null) "Add Entry" else "Edit Entry") },
 					navigationIcon = {
 						IconButton(onClick = { navigator.pop() }) {
 							Icon(Tabler.Outline.ArrowLeft, contentDescription = "Back")
@@ -108,6 +128,13 @@ data class AddLocationScreen(val latitude: Double, val longitude: Double) : Scre
 						AsyncImage(
 							model = selectedImageUri,
 							contentDescription = "Selected image",
+							modifier = Modifier.fillMaxSize(),
+							contentScale = ContentScale.Crop
+						)
+					} else if (existingImagePath != null) {
+						AsyncImage(
+							model = existingImagePath,
+							contentDescription = "Existing image",
 							modifier = Modifier.fillMaxSize(),
 							contentScale = ContentScale.Crop
 						)
@@ -183,9 +210,10 @@ data class AddLocationScreen(val latitude: Double, val longitude: Double) : Scre
 						scope.launch {
 							val imagePath = selectedImageUri?.let { uri ->
 								saveImageToInternalStorage(context, uri)
-							}
+							} ?: existingImagePath
 
 							val entry = JournalEntry(
+								id = entryId ?: 0L,
 								title = titleState.text.toString(),
 								description = descriptionState.text.toString(),
 								latitude = latitude,
@@ -195,7 +223,11 @@ data class AddLocationScreen(val latitude: Double, val longitude: Double) : Scre
 								imagePath = imagePath
 							)
 
-							repository.insert(entry)
+							if (entryId == null) {
+								repository.insert(entry)
+							} else {
+								repository.update(entry)
+							}
 							navigator.pop()
 						}
 					},
@@ -203,7 +235,7 @@ data class AddLocationScreen(val latitude: Double, val longitude: Double) : Scre
 					shape = RoundedCornerShape(12.dp),
 					contentPadding = PaddingValues(16.dp)
 				) {
-					Text("Save Entry", fontSize = 18.sp)
+					Text(if (entryId == null) "Save Entry" else "Update Entry", fontSize = 18.sp)
 				}
 			}
 		}

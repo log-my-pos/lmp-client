@@ -6,6 +6,8 @@ android-minSdk = "24"
 android-targetSdk = "36"
 androidx-activity = "1.13.0"
 androidx-lifecycle = "2.10.0"
+exifinterface = "1.3.7"
+play-services-location = "21.3.0"
 
 kotlin = "2.4.0"
 room = "2.8.4"
@@ -79,6 +81,8 @@ tablericons-outline = { module = "com.composables:icons-tabler-outline-cmp", ver
 tablericons-filled = { module = "com.composables:icons-tabler-filled-cmp", version.ref = "composables-icons" }
 
 coil = { module = "io.coil-kt:coil-compose", version = "2.7.0" }
+androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "exifinterface" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
 
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 haze-blur = { module = "dev.chrisbanes.haze:haze-blur", version.ref = "haze" }

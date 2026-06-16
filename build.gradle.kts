@@ -72,6 +72,8 @@ dependencies {
 	implementation(libs.tablericons.filled)
 
 	implementation(libs.coil)
+	implementation(libs.androidx.exifinterface)
+	implementation(libs.play.services.location)
 
 	implementation(libs.haze)
 	implementation(libs.haze.blur)

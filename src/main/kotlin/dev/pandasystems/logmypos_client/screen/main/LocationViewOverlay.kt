@@ -126,7 +126,7 @@ fun LocationViewOverlay() {
             Button(
                 onClick = {
                     val coordinate = location.coordinate
-                    navigator.navigateTo(AddLocationScreen(coordinate.longitude(), coordinate.latitude()))
+                    navigator.navigateTo(AddLocationScreen(coordinate.latitude(), coordinate.longitude()))
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),

@@ -83,14 +83,7 @@ fun App() {
 									iconSize = 0.35
 									iconAnchor = IconAnchor.BOTTOM
 									interactionsState.onClicked {
-										navigator.push(
-											LocationDetailScreen(
-												name = entry.title,
-												description = entry.description,
-												address = entry.address ?: "",
-												imagePath = entry.imagePath
-											)
-										)
+										navigator.push(LocationDetailScreen(entry.id))
 										true
 									}
 								}
