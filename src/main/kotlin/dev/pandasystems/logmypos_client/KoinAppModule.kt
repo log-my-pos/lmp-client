@@ -3,7 +3,6 @@ package dev.pandasystems.logmypos_client
 import dev.pandasystems.logmypos_client.api.LocationApiService
 import dev.pandasystems.logmypos_client.api.LogMyPosApi
 import dev.pandasystems.logmypos_client.data.AppDatabase
-import dev.pandasystems.logmypos_client.models.GlobalData
 import dev.pandasystems.logmypos_client.repository.FakeJournalRepositoryImpl
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.repository.JournalRepositoryImpl
@@ -20,8 +19,6 @@ val appModule = module {
     single { JournalRepositoryImpl(get<AppDatabase>().journalEntryDao()) } bind JournalRepository::class
     single { LocationServiceImpl() } bind LocationService::class
 
-    single { GlobalData() } bind GlobalData::class
-
     single { TokenManagerImpl(androidContext()) } bind TokenManager::class
     single { LogMyPosApi(get()) }
     single { LocationApiService(get()) }
@@ -31,8 +28,6 @@ val appModule = module {
 val previewModule = module {
     single { FakeJournalRepositoryImpl() } bind JournalRepository::class
     single { FakeLocationServiceImpl() } bind LocationService::class
-
-    single { GlobalData() } bind GlobalData::class
 
     single { FakeTokenManager() } bind TokenManager::class
     single { LogMyPosApi(get()) }

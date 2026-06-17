@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.delete
 import androidx.compose.material3.*
@@ -29,8 +28,8 @@ import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.MapPin
 import com.composables.icons.tabler.outline.X
+import dev.pandasystems.logmypos_client.LocalSearchBarProvider
 import dev.pandasystems.logmypos_client.components.InputField
-import dev.pandasystems.logmypos_client.models.GlobalData
 import dev.pandasystems.logmypos_client.models.location.LocationSearch
 import dev.pandasystems.logmypos_client.screen.main.MainScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
@@ -50,8 +49,7 @@ class SearchScreen : Screen {
 	@Composable
 	override fun Content() {
 		val locationService: LocationService = koinInject()
-		val globalData: GlobalData = koinInject()
-		val searchState: TextFieldState = globalData.searchbarState
+		val searchState = LocalSearchBarProvider.current
 
 		val navigator = LocalNavigator.currentOrThrow
 		val focusManager = LocalFocusManager.current

@@ -28,7 +28,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -45,11 +44,14 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.*
+import com.mapbox.geojson.Point
+import com.mapbox.maps.dsl.cameraOptions
 import dev.chrisbanes.haze.blur.blurEffect
 import dev.chrisbanes.haze.blur.materials.CupertinoMaterials
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
+import dev.pandasystems.logmypos_client.LocalMapViewportStateProvider
 import dev.pandasystems.logmypos_client.data.JournalEntry
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.theme.Colors
@@ -71,8 +73,6 @@ class JournalEntryScreen(
 ) : Screen {
 	@Composable
 	override fun Content() {
-		val isPreview = LocalInspectionMode.current
-
 		val repository = koinInject<JournalRepository>()
 		var entry by remember { mutableStateOf<JournalEntry?>(null) }
 		var isLoading by remember { mutableStateOf(true) }
@@ -90,6 +90,8 @@ class JournalEntryScreen(
 		val context = LocalContext.current
 		val focusManager = LocalFocusManager.current
 		val titleFocusRequester = remember { FocusRequester() }
+
+		val mapViewportState = LocalMapViewportStateProvider.current
 
 		val photoPickerLauncher = rememberLauncherForActivityResult(
 			contract = ActivityResultContracts.PickMultipleVisualMedia(),
@@ -112,10 +114,17 @@ class JournalEntryScreen(
 			if (entry != null) {
 				editedTitle = entry!!.title
 				isLoading = false
+
+				mapViewportState.flyTo(cameraOptions {
+					center(Point.fromLngLat(entry!!.longitude, entry!!.latitude))
+					zoom(15.0)
+				})
 			}
 		}
 
-		Box(Modifier.fillMaxSize()) {
+		Box(Modifier
+			.fillMaxSize()
+			.systemBarsPadding()) {
 			Column(
 				Modifier.fillMaxSize(),
 				horizontalAlignment = Alignment.CenterHorizontally,
@@ -123,134 +132,140 @@ class JournalEntryScreen(
 			) {
 				Spacer(Modifier.height(56.dp)) // For Top Bar
 				Card(-11f, onClick = { if (!isLoading) showPhotoViewer = true }) {
-				if (isLoading) {
-					Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-				} else if (entry != null) {
-					val hazeState = rememberHazeState()
+					if (isLoading) {
+						Box(
+							Modifier.fillMaxSize(),
+							contentAlignment = Alignment.Center
+						) { CircularProgressIndicator() }
+					} else if (entry != null) {
+						val hazeState = rememberHazeState()
 
-					Box(
-						Modifier
-							.fillMaxSize()
-					) {
-						if (entry!!.imagePaths.isEmpty()) {
-							Image(
-								Tabler.Outline.PhotoX,
-								contentDescription = null,
-								modifier = Modifier
-									.align(Alignment.Center)
-									.size(128.dp),
-								colorFilter = ColorFilter.tint(Colors.text.copy(alpha = 0.2f))
-							)
-						} else {
-							AsyncImage(
-								model = entry!!.imagePaths.first(),
-								contentDescription = null,
-								modifier = Modifier
-									.fillMaxSize()
-									.hazeSource(hazeState),
-								contentScale = ContentScale.Crop
-							)
-
-							val blurStyle = CupertinoMaterials.ultraThin(Color(0x66272726))
-							val shape = CircleShape
-
-							Box(
-								Modifier
-									.padding(8.dp)
-									.align(Alignment.BottomStart)
-									.clip(shape)
-									.hazeEffect(hazeState) {
-										blurEffect {
-											style = blurStyle
-										}
-									}
-									.padding(8.dp, 4.dp)
-							) {
-								Text(
-									entry!!.imagePaths.size.toString(),
-									color = Color(0xFFFFFFFF),
+						Box(
+							Modifier
+								.fillMaxSize()
+						) {
+							if (entry!!.imagePaths.isEmpty()) {
+								Image(
+									Tabler.Outline.PhotoX,
+									contentDescription = null,
+									modifier = Modifier
+										.align(Alignment.Center)
+										.size(128.dp),
+									colorFilter = ColorFilter.tint(Colors.text.copy(alpha = 0.2f))
 								)
+							} else {
+								AsyncImage(
+									model = entry!!.imagePaths.first(),
+									contentDescription = null,
+									modifier = Modifier
+										.fillMaxSize()
+										.hazeSource(hazeState),
+									contentScale = ContentScale.Crop
+								)
+
+								val blurStyle = CupertinoMaterials.ultraThin(Color(0x66272726))
+								val shape = CircleShape
+
+								Box(
+									Modifier
+										.padding(8.dp)
+										.align(Alignment.BottomStart)
+										.clip(shape)
+										.hazeEffect(hazeState) {
+											blurEffect {
+												style = blurStyle
+											}
+										}
+										.padding(8.dp, 4.dp)
+								) {
+									Text(
+										entry!!.imagePaths.size.toString(),
+										color = Color(0xFFFFFFFF),
+									)
+								}
 							}
 						}
 					}
 				}
-			}
 				Card(9.54f, onClick = { if (!isLoading) showDetailsModal = true }) {
-				if (isLoading) {
-					Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-				} else if (entry != null) {
-					Column(
-						Modifier
-							.fillMaxSize()
-							.padding(16.dp),
-						horizontalAlignment = Alignment.CenterHorizontally,
-						verticalArrangement = Arrangement.Center
-					) {
-						Row(
-							verticalAlignment = Alignment.CenterVertically,
-							horizontalArrangement = Arrangement.Center
+					if (isLoading) {
+						Box(
+							Modifier.fillMaxSize(),
+							contentAlignment = Alignment.Center
+						) { CircularProgressIndicator() }
+					} else if (entry != null) {
+						Column(
+							Modifier
+								.fillMaxSize()
+								.padding(16.dp),
+							horizontalAlignment = Alignment.CenterHorizontally,
+							verticalArrangement = Arrangement.Center
 						) {
-							Icon(
-								Tabler.Outline.Calendar,
-								contentDescription = null,
-								modifier = Modifier.size(16.dp),
-								tint = Colors.text.copy(alpha = 0.5f)
-							)
-							Spacer(Modifier.width(4.dp))
-							val localDateTime = Instant.fromEpochMilliseconds(entry!!.date)
-								.toLocalDateTime(TimeZone.currentSystemDefault())
-							val dateString =
-								"${localDateTime.dayOfMonth} ${
-									localDateTime.month.name.lowercase()
-										.replaceFirstChar { it.uppercase() }
-								} ${localDateTime.year}"
-							Text(
-								dateString,
-								style = TextStyle(
-									fontSize = 14.sp,
-									fontWeight = FontWeight.Medium,
-									color = Colors.text.copy(alpha = 0.5f)
+							Row(
+								verticalAlignment = Alignment.CenterVertically,
+								horizontalArrangement = Arrangement.Center
+							) {
+								Icon(
+									Tabler.Outline.Calendar,
+									contentDescription = null,
+									modifier = Modifier.size(16.dp),
+									tint = Colors.text.copy(alpha = 0.5f)
 								)
-							)
-						}
-						Spacer(Modifier.height(12.dp))
-						Text(
-							entry!!.description,
-							style = TextStyle(
-								fontSize = 16.sp,
-								color = Colors.text,
-								lineHeight = 22.sp
-							),
-							maxLines = 3,
-							overflow = TextOverflow.Ellipsis,
-							textAlign = TextAlign.Center
-						)
-						Spacer(Modifier.height(12.dp))
-						Row(
-							verticalAlignment = Alignment.CenterVertically,
-							horizontalArrangement = Arrangement.Center,
-							modifier = Modifier.padding(horizontal = 8.dp)
-						) {
-							Icon(
-								Tabler.Outline.MapPin,
-								contentDescription = null,
-								modifier = Modifier.size(14.dp),
-								tint = Colors.text.copy(alpha = 0.4f)
-							)
-							Spacer(Modifier.width(4.dp))
+								Spacer(Modifier.width(4.dp))
+								val localDateTime = Instant.fromEpochMilliseconds(entry!!.date)
+									.toLocalDateTime(TimeZone.currentSystemDefault())
+								val dateString =
+									"${localDateTime.dayOfMonth} ${
+										localDateTime.month.name.lowercase()
+											.replaceFirstChar { it.uppercase() }
+									} ${localDateTime.year}"
+								Text(
+									dateString,
+									style = TextStyle(
+										fontSize = 14.sp,
+										fontWeight = FontWeight.Medium,
+										color = Colors.text.copy(alpha = 0.5f)
+									)
+								)
+							}
+							Spacer(Modifier.height(12.dp))
 							Text(
-								if (!entry!!.address.isNullOrBlank()) entry!!.address!! else "${entry!!.latitude}, ${entry!!.longitude}",
+								entry!!.description,
 								style = TextStyle(
-									fontSize = 12.sp,
-									color = Colors.text.copy(alpha = 0.4f)
+									fontSize = 16.sp,
+									color = Colors.text,
+									lineHeight = 22.sp
 								),
-								maxLines = 1,
+								maxLines = 3,
 								overflow = TextOverflow.Ellipsis,
 								textAlign = TextAlign.Center
 							)
+							Spacer(Modifier.height(12.dp))
+							Row(
+								verticalAlignment = Alignment.CenterVertically,
+								horizontalArrangement = Arrangement.Center,
+								modifier = Modifier.padding(horizontal = 8.dp)
+							) {
+								Icon(
+									Tabler.Outline.MapPin,
+									contentDescription = null,
+									modifier = Modifier.size(14.dp),
+									tint = Colors.text.copy(alpha = 0.4f)
+								)
+								Spacer(Modifier.width(4.dp))
+								Text(
+									if (!entry!!.address.isNullOrBlank()) entry!!.address!! else "${entry!!.latitude}, ${entry!!.longitude}",
+									style = TextStyle(
+										fontSize = 12.sp,
+										color = Colors.text.copy(alpha = 0.4f)
+									),
+									maxLines = 1,
+									overflow = TextOverflow.Ellipsis,
+									textAlign = TextAlign.Center
+								)
+							}
 						}
 					}
-				}
 				}
 			}
 
@@ -310,7 +325,7 @@ class JournalEntryScreen(
 						LaunchedEffect(Unit) {
 							titleFocusRequester.requestFocus()
 						}
-				} else {
+					} else {
 						Text(
 							entry?.title ?: "",
 							style = TextStyle(
@@ -543,8 +558,7 @@ class JournalEntryScreen(
 					}
 				}
 			}
-
-		} // End of outer Box
+		}
 	}
 
 	private fun saveImageToInternalStorage(context: android.content.Context, uri: android.net.Uri): String? {

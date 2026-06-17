@@ -3,6 +3,7 @@ package dev.pandasystems.logmypos_client.services.location
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.mapbox.geojson.BoundingBox
 import com.mapbox.geojson.Point
 import com.mapbox.search.autocomplete.PlaceAutocomplete
 import com.mapbox.search.autocomplete.PlaceAutocompleteResult
@@ -85,6 +86,8 @@ class LocationServiceImpl : LocationService {
             }
         override val coordinate: Point
             get() = mapboxData.coordinate
+        override val boundingBox: BoundingBox?
+            get() = mapboxData.boundingBox
 
     }
 }

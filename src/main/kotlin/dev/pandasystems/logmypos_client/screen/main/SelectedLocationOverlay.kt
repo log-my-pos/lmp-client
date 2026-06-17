@@ -22,7 +22,7 @@ import com.composables.icons.tabler.outline.MapPin
 import com.composables.icons.tabler.outline.Plus
 import com.composables.icons.tabler.outline.X
 import com.mapbox.maps.dsl.cameraOptions
-import dev.pandasystems.logmypos_client.models.GlobalData
+import dev.pandasystems.logmypos_client.LocalMapViewportStateProvider
 import dev.pandasystems.logmypos_client.screen.location.AddLocationScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
@@ -41,16 +41,36 @@ private fun LocationViewOverlayPreview() = SetupPreview {
 fun LocationViewOverlay() {
     val navigator = getNavigator()
     val locationService = koinInject<LocationService>()
-    val globalData = koinInject<GlobalData>()
-    val mapViewportState = globalData.mapViewportState
+    val mapViewportState = LocalMapViewportStateProvider.current
 
     val location = locationService.selectedLocation ?: return
 
     LaunchedEffect(location) {
-        mapViewportState.flyTo(cameraOptions {
-            center(location.coordinate)
-            zoom(14.0)
-        })
+        val bbox = location.boundingBox
+        if (bbox != null) {
+            val deltaLat = kotlin.math.abs(bbox.north() - bbox.south())
+            val deltaLng = kotlin.math.abs(bbox.east() - bbox.west())
+            val maxDelta = kotlin.math.max(deltaLat, deltaLng)
+
+            val zoom = when {
+                maxDelta > 20.0 -> 2.0
+                maxDelta > 10.0 -> 4.0
+                maxDelta > 5.0 -> 6.0
+                maxDelta > 1.0 -> 9.0
+                maxDelta > 0.1 -> 12.0
+                else -> 14.0
+            }
+
+            mapViewportState.flyTo(cameraOptions {
+                center(location.coordinate)
+                zoom(zoom)
+            })
+        } else {
+            mapViewportState.flyTo(cameraOptions {
+                center(location.coordinate)
+                zoom(14.0)
+            })
+        }
     }
 
     Surface(

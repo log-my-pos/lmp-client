@@ -29,7 +29,12 @@ class FakeLocationServiceImpl : LocationService {
 	}
 
 	override suspend fun selectLocation(latitude: Double, longitude: Double) {
-		selectedLocation = FakeLocationData("North Colin", Address("2049 Cremin Parkway, North Colin, NC 30166"), Point.fromLngLat(longitude, latitude))
+        selectedLocation = FakeLocationData(
+            "North Colin",
+            Address("2049 Cremin Parkway, North Colin, NC 30166"),
+            Point.fromLngLat(longitude, latitude),
+            null
+        )
 	}
 
 	override fun clearSelection() {

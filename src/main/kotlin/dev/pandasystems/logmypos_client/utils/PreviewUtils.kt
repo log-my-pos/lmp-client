@@ -3,6 +3,7 @@ package dev.pandasystems.logmypos_client.utils
 import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
+import dev.pandasystems.logmypos_client.App
 import dev.pandasystems.logmypos_client.previewModule
 import org.koin.compose.KoinIsolatedContext
 import org.koin.core.context.startKoin
@@ -13,8 +14,10 @@ val previewKoinApp = startKoin {
 
 @Composable
 fun SetupPreview(content: @Composable () -> Unit) {
-	KoinIsolatedContext(previewKoinApp) {
-		content()
+	App {
+		KoinIsolatedContext(previewKoinApp) {
+			content()
+		}
 	}
 }
 
