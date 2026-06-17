@@ -32,5 +32,5 @@ val previewModule = module {
     single { FakeTokenManager() } bind TokenManager::class
     single { LogMyPosApi(get()) }
     single { LocationApiService(get()) }
-    single { AuthServiceImpl(get(), get()) } bind AuthService::class
+    single { FakeAuthService() } bind AuthService::class
 }

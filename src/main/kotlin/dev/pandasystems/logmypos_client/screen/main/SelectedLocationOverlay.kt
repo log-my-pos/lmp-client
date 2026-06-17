@@ -23,7 +23,7 @@ import com.composables.icons.tabler.outline.Plus
 import com.composables.icons.tabler.outline.X
 import com.mapbox.maps.dsl.cameraOptions
 import dev.pandasystems.logmypos_client.LocalMapViewportStateProvider
-import dev.pandasystems.logmypos_client.screen.location.AddLocationScreen
+import dev.pandasystems.logmypos_client.screen.location.JournalEntryScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
 import dev.pandasystems.logmypos_client.utils.SetupPreview
@@ -144,7 +144,12 @@ fun LocationViewOverlay() {
             Button(
                 onClick = {
                     val coordinate = location.coordinate
-                    navigator.navigateTo(AddLocationScreen(coordinate.latitude(), coordinate.longitude()))
+                    navigator.navigateTo(
+                        JournalEntryScreen(
+                            latitude = coordinate.latitude(),
+                            longitude = coordinate.longitude()
+                        )
+                    )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),

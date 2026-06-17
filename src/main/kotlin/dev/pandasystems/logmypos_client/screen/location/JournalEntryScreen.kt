@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.work.*
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -52,10 +53,15 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import dev.pandasystems.logmypos_client.LocalMapViewportStateProvider
+import dev.pandasystems.logmypos_client.api.LocationApiService
 import dev.pandasystems.logmypos_client.data.JournalEntry
+import dev.pandasystems.logmypos_client.models.location.LocationData
 import dev.pandasystems.logmypos_client.repository.JournalRepository
+import dev.pandasystems.logmypos_client.services.auth.AuthService
+import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
 import dev.pandasystems.logmypos_client.utils.SetupPreviewScreen
+import dev.pandasystems.logmypos_client.worker.SyncWorker
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -69,19 +75,32 @@ import java.io.FileOutputStream
 private fun PreviewBaseJournalScreen() = SetupPreviewScreen(JournalEntryScreen(0L))
 
 class JournalEntryScreen(
-	val entryId: Long
+	val entryId: Long? = null,
+	val latitude: Double? = null,
+	val longitude: Double? = null,
+	val initialImageUris: List<String> = emptyList()
 ) : Screen {
 	@Composable
 	override fun Content() {
 		val repository = koinInject<JournalRepository>()
+		val locationService: LocationService = koinInject()
+		val locationApiService: LocationApiService = koinInject()
+		val authService: AuthService = koinInject()
+		val isLoggedIn by authService.isLoggedIn.collectAsState()
+
 		var entry by remember { mutableStateOf<JournalEntry?>(null) }
-		var isLoading by remember { mutableStateOf(true) }
+		var isLoading by remember { mutableStateOf(entryId != null) }
 
 		var showPhotoViewer by remember { mutableStateOf(false) }
 		var showDetailsModal by remember { mutableStateOf(false) }
 
 		var isEditingTitle by remember { mutableStateOf(false) }
 		var editedTitle by remember { mutableStateOf("") }
+		var isEditingDescription by remember { mutableStateOf(false) }
+		var editedDescription by remember { mutableStateOf("") }
+		var editedImagePaths by remember { mutableStateOf<List<String>>(emptyList()) }
+		var currentLocation by remember { mutableStateOf<LocationData?>(null) }
+
 		var showDeleteEntryConfirmation by remember { mutableStateOf(false) }
 		var showDeletePhotoConfirmation by remember { mutableStateOf(false) }
 
@@ -90,6 +109,8 @@ class JournalEntryScreen(
 		val context = LocalContext.current
 		val focusManager = LocalFocusManager.current
 		val titleFocusRequester = remember { FocusRequester() }
+		val descriptionFocusRequester = remember { FocusRequester() }
+		val modalTitleFocusRequester = remember { FocusRequester() }
 
 		val mapViewportState = LocalMapViewportStateProvider.current
 
@@ -97,26 +118,49 @@ class JournalEntryScreen(
 			contract = ActivityResultContracts.PickMultipleVisualMedia(),
 			onResult = { uris ->
 				scope.launch {
-					entry?.let { currentEntry ->
-						val newImagePaths = uris.mapNotNull { uri ->
-							saveImageToInternalStorage(context, uri)
-						}
-						val updatedEntry = currentEntry.copy(imagePaths = currentEntry.imagePaths + newImagePaths)
-						repository.update(updatedEntry)
-						entry = updatedEntry
+					val newImagePaths = uris.mapNotNull { uri ->
+						saveImageToInternalStorage(context, uri)
 					}
+					editedImagePaths = editedImagePaths + newImagePaths
 				}
 			}
 		)
 
 		LaunchedEffect(entryId) {
-			entry = repository.getEntryById(entryId)
-			if (entry != null) {
-				editedTitle = entry!!.title
+			if (entryId != null) {
+				entry = repository.getEntryById(entryId)
+				if (entry != null) {
+					editedTitle = entry!!.title
+					editedDescription = entry!!.description
+					editedImagePaths = entry!!.imagePaths
+					isLoading = false
+
+					mapViewportState.flyTo(cameraOptions {
+						center(Point.fromLngLat(entry!!.longitude, entry!!.latitude))
+						zoom(15.0)
+					})
+				}
+			} else if (latitude != null && longitude != null) {
+				currentLocation = locationService.findLocations(longitude, latitude).firstOrNull()?.resolve()
+
+				val newEntry = JournalEntry(
+					title = "",
+					description = "",
+					latitude = latitude,
+					longitude = longitude,
+					address = currentLocation?.address?.formattedAddress ?: currentLocation?.name,
+					date = System.currentTimeMillis(),
+					imagePaths = emptyList()
+				)
+				entry = newEntry
+				editedTitle = ""
+				editedDescription = ""
+				editedImagePaths =
+					initialImageUris.mapNotNull { saveImageToInternalStorage(context, android.net.Uri.parse(it)) }
 				isLoading = false
 
 				mapViewportState.flyTo(cameraOptions {
-					center(Point.fromLngLat(entry!!.longitude, entry!!.latitude))
+					center(Point.fromLngLat(longitude, latitude))
 					zoom(15.0)
 				})
 			}
@@ -144,7 +188,7 @@ class JournalEntryScreen(
 							Modifier
 								.fillMaxSize()
 						) {
-							if (entry!!.imagePaths.isEmpty()) {
+							if (editedImagePaths.isEmpty()) {
 								Image(
 									Tabler.Outline.PhotoX,
 									contentDescription = null,
@@ -155,7 +199,7 @@ class JournalEntryScreen(
 								)
 							} else {
 								AsyncImage(
-									model = entry!!.imagePaths.first(),
+									model = editedImagePaths.first(),
 									contentDescription = null,
 									modifier = Modifier
 										.fillMaxSize()
@@ -179,7 +223,7 @@ class JournalEntryScreen(
 										.padding(8.dp, 4.dp)
 								) {
 									Text(
-										entry!!.imagePaths.size.toString(),
+										editedImagePaths.size.toString(),
 										color = Color(0xFFFFFFFF),
 									)
 								}
@@ -230,10 +274,10 @@ class JournalEntryScreen(
 							}
 							Spacer(Modifier.height(12.dp))
 							Text(
-								entry!!.description,
+								editedDescription.ifBlank { "Add a description..." },
 								style = TextStyle(
 									fontSize = 16.sp,
-									color = Colors.text,
+									color = if (editedDescription.isBlank()) Colors.text.copy(alpha = 0.5f) else Colors.text,
 									lineHeight = 22.sp
 								),
 								maxLines = 3,
@@ -311,13 +355,6 @@ class JournalEntryScreen(
 							keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
 							keyboardActions = KeyboardActions(onDone = {
 								isEditingTitle = false
-								scope.launch {
-									entry?.let {
-										val updatedEntry = it.copy(title = editedTitle)
-										repository.update(updatedEntry)
-										entry = updatedEntry
-									}
-								}
 								focusManager.clearFocus()
 							}),
 							singleLine = true
@@ -327,11 +364,11 @@ class JournalEntryScreen(
 						}
 					} else {
 						Text(
-							entry?.title ?: "",
+							editedTitle.ifBlank { if (entryId == null) "New Entry" else "No Title" },
 							style = TextStyle(
 								fontSize = 18.sp,
 								fontWeight = FontWeight.Bold,
-								color = Colors.text
+								color = if (editedTitle.isBlank()) Colors.text.copy(alpha = 0.5f) else Colors.text
 							),
 							modifier = Modifier.clickable { isEditingTitle = true },
 							maxLines = 1,
@@ -340,18 +377,117 @@ class JournalEntryScreen(
 					}
 				}
 
-				Surface(
-					onClick = { showDeleteEntryConfirmation = true },
-					shape = CircleShape,
-					color = Colors.background,
-					modifier = Modifier.size(40.dp)
-				) {
-					Box(contentAlignment = Alignment.Center) {
-						Icon(
-							Tabler.Outline.Trash,
-							contentDescription = "Delete",
-							modifier = Modifier.size(20.dp)
+				if (entryId != null) {
+					Surface(
+						onClick = { showDeleteEntryConfirmation = true },
+						shape = CircleShape,
+						color = Colors.background,
+						modifier = Modifier.size(40.dp)
+					) {
+						Box(contentAlignment = Alignment.Center) {
+							Icon(
+								Tabler.Outline.Trash,
+								contentDescription = "Delete",
+								modifier = Modifier.size(20.dp)
+							)
+						}
+					}
+				} else {
+					Spacer(Modifier.size(40.dp))
+				}
+			}
+
+			// Bottom Save/Cancel buttons
+			val hasChanges = remember(editedTitle, editedDescription, editedImagePaths, entry) {
+				entry != null && (
+						editedTitle != entry?.title ||
+								editedDescription != entry?.description ||
+								editedImagePaths != entry?.imagePaths
 						)
+			}
+
+			if (hasChanges || entryId == null) {
+				Row(
+					Modifier
+						.align(Alignment.BottomCenter)
+						.padding(bottom = 32.dp)
+						.navigationBarsPadding(),
+					horizontalArrangement = Arrangement.spacedBy(16.dp)
+				) {
+					Button(
+						onClick = {
+							if (entryId == null) {
+								navigator.pop()
+							} else {
+								editedTitle = entry?.title ?: ""
+								editedDescription = entry?.description ?: ""
+								editedImagePaths = entry?.imagePaths ?: emptyList()
+								isEditingTitle = false
+								isEditingDescription = false
+							}
+						},
+						colors = ButtonDefaults.buttonColors(containerColor = Colors.backgroundSecondary),
+						border = BorderStroke(1.dp, Colors.borderColor),
+						shape = RoundedCornerShape(12.dp)
+					) {
+						Text("Cancel", color = Colors.text)
+					}
+
+					Button(
+						onClick = {
+							scope.launch {
+								var synced = false
+								if (isLoggedIn) {
+									val response = if (entryId == null) {
+										locationApiService.createLocation(
+											title = editedTitle,
+											description = editedDescription,
+											latitude = latitude ?: 0.0,
+											longitude = longitude ?: 0.0
+										)
+									} else {
+										null
+									}
+									synced = response != null
+								}
+
+								val updatedEntry = JournalEntry(
+									id = entryId ?: 0L,
+									title = editedTitle,
+									description = editedDescription,
+									latitude = entry?.latitude ?: latitude ?: 0.0,
+									longitude = entry?.longitude ?: longitude ?: 0.0,
+									address = entry?.address ?: currentLocation?.address?.formattedAddress
+									?: currentLocation?.name,
+									date = entry?.date ?: System.currentTimeMillis(),
+									imagePaths = editedImagePaths,
+									isSynced = synced
+								)
+
+								if (entryId == null) {
+									repository.insert(updatedEntry)
+								} else {
+									repository.update(updatedEntry)
+								}
+
+								if (isLoggedIn && !synced) {
+									triggerSync(context)
+								}
+
+								if (entryId == null) {
+									locationService.clearSelection()
+									navigator.pop()
+								} else {
+									entry = updatedEntry
+									isEditingTitle = false
+									isEditingDescription = false
+								}
+							}
+						},
+						colors = ButtonDefaults.buttonColors(containerColor = Colors.text),
+						shape = RoundedCornerShape(12.dp)
+					) {
+						Text("Save", color = Colors.background)
 					}
 				}
 			}
@@ -383,7 +519,7 @@ class JournalEntryScreen(
 			}
 
 			if (showPhotoViewer && entry != null) {
-				val pagerState = rememberPagerState { entry!!.imagePaths.size }
+				val pagerState = rememberPagerState { editedImagePaths.size }
 				Dialog(
 					onDismissRequest = { showPhotoViewer = false },
 					properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -393,7 +529,7 @@ class JournalEntryScreen(
 							.fillMaxSize()
 							.background(Color.Black.copy(alpha = 0.9f))
 					) {
-						if (entry!!.imagePaths.isEmpty()) {
+						if (editedImagePaths.isEmpty()) {
 							Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 								Column(horizontalAlignment = Alignment.CenterHorizontally) {
 									Icon(
@@ -412,7 +548,7 @@ class JournalEntryScreen(
 								modifier = Modifier.fillMaxSize()
 							) { index ->
 								AsyncImage(
-									model = entry!!.imagePaths[index],
+									model = editedImagePaths[index],
 									contentDescription = null,
 									modifier = Modifier
 										.fillMaxSize()
@@ -464,7 +600,7 @@ class JournalEntryScreen(
 								Text("Add", color = Color.White)
 							}
 
-							if (entry!!.imagePaths.isNotEmpty()) {
+							if (editedImagePaths.isNotEmpty()) {
 								Button(
 									onClick = { showDeletePhotoConfirmation = true },
 									colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.6f)),
@@ -488,11 +624,9 @@ class JournalEntryScreen(
 							TextButton(
 								onClick = {
 									scope.launch {
-										val updatedImagePaths = entry!!.imagePaths.toMutableList()
+										val updatedImagePaths = editedImagePaths.toMutableList()
 										updatedImagePaths.removeAt(pagerState.currentPage)
-										val updatedEntry = entry!!.copy(imagePaths = updatedImagePaths)
-										repository.update(updatedEntry)
-										entry = updatedEntry
+										editedImagePaths = updatedImagePaths
 										showDeletePhotoConfirmation = false
 									}
 								},
@@ -526,23 +660,74 @@ class JournalEntryScreen(
 								.fillMaxWidth(),
 							horizontalAlignment = Alignment.CenterHorizontally
 						) {
-							Text(
-								entry!!.title,
-								style = TextStyle(
-									fontSize = 24.sp,
-									fontWeight = FontWeight.Bold,
-									color = Colors.text
+							if (isEditingTitle) {
+								BasicTextField(
+									value = editedTitle,
+									onValueChange = { editedTitle = it },
+									textStyle = TextStyle(
+										fontSize = 24.sp,
+										fontWeight = FontWeight.Bold,
+										textAlign = TextAlign.Center,
+										color = Colors.text
+									),
+									modifier = Modifier
+										.focusRequester(modalTitleFocusRequester)
+										.fillMaxWidth(),
+									keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+									keyboardActions = KeyboardActions(onDone = {
+										isEditingTitle = false
+										focusManager.clearFocus()
+									}),
+									singleLine = true
 								)
-							)
+								LaunchedEffect(Unit) {
+									modalTitleFocusRequester.requestFocus()
+								}
+							} else {
+								Text(
+									editedTitle.ifBlank { if (entryId == null) "New Entry" else "No Title" },
+									style = TextStyle(
+										fontSize = 24.sp,
+										fontWeight = FontWeight.Bold,
+										color = if (editedTitle.isBlank()) Colors.text.copy(alpha = 0.5f) else Colors.text
+									),
+									textAlign = TextAlign.Center,
+									modifier = Modifier.clickable { isEditingTitle = true }
+								)
+							}
 							Spacer(Modifier.height(16.dp))
-							Text(
-								entry!!.description,
-								style = TextStyle(
-									fontSize = 16.sp,
-									color = Colors.text
-								),
-								textAlign = TextAlign.Center
-							)
+							if (isEditingDescription) {
+								BasicTextField(
+									value = editedDescription,
+									onValueChange = { editedDescription = it },
+									textStyle = TextStyle(
+										fontSize = 16.sp,
+										color = Colors.text,
+										textAlign = TextAlign.Center
+									),
+									modifier = Modifier
+										.focusRequester(descriptionFocusRequester)
+										.fillMaxWidth(),
+									keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+									keyboardActions = KeyboardActions(onDone = {
+										isEditingDescription = false
+										focusManager.clearFocus()
+									})
+								)
+								LaunchedEffect(Unit) {
+									descriptionFocusRequester.requestFocus()
+								}
+							} else {
+								Text(
+									editedDescription.ifBlank { "Add a description..." },
+									style = TextStyle(
+										fontSize = 16.sp,
+										color = if (editedDescription.isBlank()) Colors.text.copy(alpha = 0.5f) else Colors.text
+									),
+									textAlign = TextAlign.Center,
+									modifier = Modifier.clickable { isEditingDescription = true }
+								)
+							}
 							Spacer(Modifier.height(16.dp))
 							HorizontalDivider(color = Colors.borderColor.copy(alpha = 0.5f))
 							Spacer(Modifier.height(16.dp))
@@ -559,6 +744,22 @@ class JournalEntryScreen(
 				}
 			}
 		}
+	}
+
+	private fun triggerSync(context: android.content.Context) {
+		val constraints = Constraints.Builder()
+			.setRequiredNetworkType(NetworkType.CONNECTED)
+			.build()
+
+		val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+			.setConstraints(constraints)
+			.build()
+
+		WorkManager.getInstance(context).enqueueUniqueWork(
+			"LocationSync",
+			ExistingWorkPolicy.APPEND_OR_REPLACE,
+			syncRequest
+		)
 	}
 
 	private fun saveImageToInternalStorage(context: android.content.Context, uri: android.net.Uri): String? {

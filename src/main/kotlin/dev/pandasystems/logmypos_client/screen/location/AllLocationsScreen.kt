@@ -103,7 +103,7 @@ class AllLocationsScreen : Screen {
                 ) {
                     items(filteredEntries) { entry ->
                         LocationItem(entry = entry) {
-                            navigator.push(LocationDetailScreen(entry.id))
+                            navigator.push(JournalEntryScreen(entryId = entry.id))
                         }
                     }
                 }

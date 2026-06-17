@@ -40,8 +40,8 @@ import dev.pandasystems.logmypos_client.LocalSearchBarProvider
 import dev.pandasystems.logmypos_client.components.InputField
 import dev.pandasystems.logmypos_client.screen.auth.LoginScreen
 import dev.pandasystems.logmypos_client.screen.auth.ProfileScreen
-import dev.pandasystems.logmypos_client.screen.location.AddLocationScreen
 import dev.pandasystems.logmypos_client.screen.location.AllLocationsScreen
+import dev.pandasystems.logmypos_client.screen.location.JournalEntryScreen
 import dev.pandasystems.logmypos_client.screen.search.SearchScreen
 import dev.pandasystems.logmypos_client.services.auth.AuthService
 import dev.pandasystems.logmypos_client.services.location.LocationService
@@ -69,16 +69,16 @@ class MainScreen : Screen {
             if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
             ) {
-                navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = uris))
+                navigator.push(JournalEntryScreen(latitude = 0.0, longitude = 0.0, initialImageUris = uris))
             } else {
                 try {
                     fusedLocationClient.lastLocation.addOnCompleteListener { task ->
                         val location = if (task.isSuccessful) task.result else null
                         if (location != null) {
                             navigator.push(
-                                AddLocationScreen(
-                                    location.latitude,
-                                    location.longitude,
+                                JournalEntryScreen(
+                                    latitude = location.latitude,
+                                    longitude = location.longitude,
                                     initialImageUris = uris
                                 )
                             )
@@ -89,20 +89,26 @@ class MainScreen : Screen {
                                     val currentLocation = if (currentTask.isSuccessful) currentTask.result else null
                                     if (currentLocation != null) {
                                         navigator.push(
-                                            AddLocationScreen(
-                                                currentLocation.latitude,
-                                                currentLocation.longitude,
+                                            JournalEntryScreen(
+                                                latitude = currentLocation.latitude,
+                                                longitude = currentLocation.longitude,
                                                 initialImageUris = uris
                                             )
                                         )
                                     } else {
-                                        navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = uris))
+                                        navigator.push(
+                                            JournalEntryScreen(
+                                                latitude = 0.0,
+                                                longitude = 0.0,
+                                                initialImageUris = uris
+                                            )
+                                        )
                                     }
                                 }
                         }
                     }
                 } catch (e: SecurityException) {
-                    navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = uris))
+                    navigator.push(JournalEntryScreen(latitude = 0.0, longitude = 0.0, initialImageUris = uris))
                 }
             }
         }
@@ -124,9 +130,15 @@ class MainScreen : Screen {
                     val coords = getExifLatLong(context, firstUri)
                     val allUris = uris.map { it.toString() }
                     if (coords != null) {
-                        navigator.push(AddLocationScreen(coords.first, coords.second, initialImageUris = allUris))
+                        navigator.push(
+                            JournalEntryScreen(
+                                latitude = coords.first,
+                                longitude = coords.second,
+                                initialImageUris = allUris
+                            )
+                        )
                     } else {
-                        navigator.push(AddLocationScreen(0.0, 0.0, initialImageUris = allUris))
+                        navigator.push(JournalEntryScreen(latitude = 0.0, longitude = 0.0, initialImageUris = allUris))
                     }
                 }
             }
