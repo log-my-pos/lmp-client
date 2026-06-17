@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
 									val marker = rememberIconImage(R.drawable.marker)
 									val selectedLocation = locationService.selectedLocation
 									if (selectedLocation != null) {
-										PointAnnotation(selectedLocation.coordinate) {
+										PointAnnotation(selectedLocation.asMapBoxPoint) {
 											iconImage = marker
 											iconSize = 0.35
 											iconAnchor = IconAnchor.BOTTOM

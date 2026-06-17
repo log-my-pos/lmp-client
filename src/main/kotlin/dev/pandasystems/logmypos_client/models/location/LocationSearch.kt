@@ -1,5 +1,8 @@
 package dev.pandasystems.logmypos_client.models.location
 
+import com.mapbox.geojson.Point
+import dev.pandasystems.logmypos_client.models.Address
+
 interface LocationSearch {
 	val name: String
 	val formattedAddress: String?
@@ -14,6 +17,6 @@ data class FakeLocationSearch(
 	override val distanceMeters: Double?
 ) : LocationSearch {
 	override suspend fun resolve(): LocationData {
-		TODO("Not yet implemented")
+		return FakeLocationData(name, Address(formattedAddress), Point.fromLngLat(0.0, 0.0), null)
 	}
 }

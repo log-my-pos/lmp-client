@@ -30,6 +30,7 @@ import com.composables.icons.tabler.outline.MapPin
 import com.composables.icons.tabler.outline.X
 import dev.pandasystems.logmypos_client.LocalSearchBarProvider
 import dev.pandasystems.logmypos_client.components.InputField
+import dev.pandasystems.logmypos_client.data.asCoordinate
 import dev.pandasystems.logmypos_client.models.location.LocationSearch
 import dev.pandasystems.logmypos_client.screen.main.MainScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
@@ -146,7 +147,7 @@ class SearchScreen : Screen {
 								suggestion = suggestion,
 								onClick = {
 									coroutineScope.launch {
-										locationService.selectedLocation = suggestion.resolve()
+										locationService.selectedLocation = suggestion.resolve().coordinate.asCoordinate
 										navigator.popUntil { MainScreen::class.isInstance(it) }
 										focusManager.clearFocus()
 										keyboardController?.hide()

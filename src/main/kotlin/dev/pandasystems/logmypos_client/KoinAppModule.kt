@@ -7,7 +7,7 @@ import dev.pandasystems.logmypos_client.repository.FakeJournalRepositoryImpl
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.repository.JournalRepositoryImpl
 import dev.pandasystems.logmypos_client.services.auth.*
-import dev.pandasystems.logmypos_client.services.location.FakeLocationServiceImpl
+import dev.pandasystems.logmypos_client.services.location.FakeLocationService
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.services.location.LocationServiceImpl
 import org.koin.android.ext.koin.androidContext
@@ -27,7 +27,7 @@ val appModule = module {
 
 val previewModule = module {
     single { FakeJournalRepositoryImpl() } bind JournalRepository::class
-    single { FakeLocationServiceImpl() } bind LocationService::class
+    single { FakeLocationService() } bind LocationService::class
 
     single { FakeTokenManager() } bind TokenManager::class
     single { LogMyPosApi(get()) }

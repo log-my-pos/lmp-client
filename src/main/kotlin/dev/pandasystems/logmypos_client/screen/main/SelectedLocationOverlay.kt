@@ -5,8 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,6 +22,9 @@ import com.composables.icons.tabler.outline.Plus
 import com.composables.icons.tabler.outline.X
 import com.mapbox.maps.dsl.cameraOptions
 import dev.pandasystems.logmypos_client.LocalMapViewportStateProvider
+import dev.pandasystems.logmypos_client.components.TextLoadingPlaceholder
+import dev.pandasystems.logmypos_client.data.Coordinate
+import dev.pandasystems.logmypos_client.models.location.LocationData
 import dev.pandasystems.logmypos_client.screen.location.JournalEntryScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
@@ -43,34 +45,43 @@ fun LocationViewOverlay() {
     val locationService = koinInject<LocationService>()
     val mapViewportState = LocalMapViewportStateProvider.current
 
-    val location = locationService.selectedLocation ?: return
+    val locationCoords = locationService.selectedLocation ?: Coordinate(0.0, 0.0)
+    var locationEntry by remember { mutableStateOf<LocationData?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(location) {
-        val bbox = location.boundingBox
-        if (bbox != null) {
-            val deltaLat = kotlin.math.abs(bbox.north() - bbox.south())
-            val deltaLng = kotlin.math.abs(bbox.east() - bbox.west())
-            val maxDelta = kotlin.math.max(deltaLat, deltaLng)
+    LaunchedEffect(locationCoords) {
+        isLoading = true
+        locationEntry = locationService
+            .findLocations(locationCoords.latitude, locationCoords.longitude)
+            .firstOrNull()
+            ?.resolve()
 
-            val zoom = when {
-                maxDelta > 20.0 -> 2.0
-                maxDelta > 10.0 -> 4.0
-                maxDelta > 5.0 -> 6.0
-                maxDelta > 1.0 -> 9.0
-                maxDelta > 0.1 -> 12.0
-                else -> 14.0
-            }
+        println(locationEntry)
 
-            mapViewportState.flyTo(cameraOptions {
-                center(location.coordinate)
-                zoom(zoom)
-            })
-        } else {
-            mapViewportState.flyTo(cameraOptions {
-                center(location.coordinate)
-                zoom(14.0)
-            })
-        }
+        val zoom = if (locationEntry != null) {
+            val bbox = locationEntry!!.boundingBox
+            if (bbox != null) {
+                val deltaLat = kotlin.math.abs(bbox.north() - bbox.south())
+                val deltaLng = kotlin.math.abs(bbox.east() - bbox.west())
+                val maxDelta = kotlin.math.max(deltaLat, deltaLng)
+
+                when {
+                    maxDelta > 20.0 -> 2.0
+                    maxDelta > 10.0 -> 4.0
+                    maxDelta > 5.0 -> 6.0
+                    maxDelta > 1.0 -> 9.0
+                    maxDelta > 0.1 -> 12.0
+                    else -> 14.0
+                }
+            } else 14.0
+        } else 14.0
+
+        mapViewportState.flyTo(cameraOptions {
+            center(locationCoords.asMapBoxPoint)
+            zoom(zoom)
+        })
+
+        isLoading = false
     }
 
     Surface(
@@ -117,13 +128,18 @@ fun LocationViewOverlay() {
                         color = Colors.text.copy(alpha = 0.5f),
                         fontWeight = FontWeight.Medium
                     )
-                    Text(
-                        text = location.address?.formattedAddress ?: location.name,
-                        fontSize = 16.sp,
-                        color = Colors.text,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1
-                    )
+                    if (!isLoading) {
+                        Text(
+                            text = locationEntry?.address?.formattedAddress ?: locationEntry?.name
+                            ?: locationCoords.toString(),
+                            fontSize = 16.sp,
+                            color = Colors.text,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
+                        )
+                    } else {
+                        TextLoadingPlaceholder()
+                    }
                 }
 
                 IconButton(
@@ -143,11 +159,10 @@ fun LocationViewOverlay() {
 
             Button(
                 onClick = {
-                    val coordinate = location.coordinate
                     navigator.navigateTo(
                         JournalEntryScreen(
-                            latitude = coordinate.latitude(),
-                            longitude = coordinate.longitude()
+                            latitude = locationCoords.latitude,
+                            longitude = locationCoords.longitude
                         )
                     )
                 },

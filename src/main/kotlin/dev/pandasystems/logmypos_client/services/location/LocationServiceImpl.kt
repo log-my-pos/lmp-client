@@ -8,14 +8,14 @@ import com.mapbox.geojson.Point
 import com.mapbox.search.autocomplete.PlaceAutocomplete
 import com.mapbox.search.autocomplete.PlaceAutocompleteResult
 import com.mapbox.search.autocomplete.PlaceAutocompleteSuggestion
+import dev.pandasystems.logmypos_client.data.Coordinate
 import dev.pandasystems.logmypos_client.models.Address
-import dev.pandasystems.logmypos_client.models.location.CoordinateLocationData
 import dev.pandasystems.logmypos_client.models.location.LocationData
 import dev.pandasystems.logmypos_client.models.location.LocationSearch
 
 class LocationServiceImpl : LocationService {
     val placeAutocomplete = PlaceAutocomplete.create(null)
-    override var selectedLocation: LocationData? by mutableStateOf(null)
+    override var selectedLocation: Coordinate? by mutableStateOf(null)
 
     override suspend fun findLocations(latitude: Double, longitude: Double): List<LocationSearch> {
         val suggestions = placeAutocomplete.reverse(Point.fromLngLat(longitude, latitude))
@@ -42,12 +42,7 @@ class LocationServiceImpl : LocationService {
     }
 
     override suspend fun selectLocation(latitude: Double, longitude: Double) {
-        val locations = findLocations(latitude, longitude)
-        selectedLocation = if (locations.isNotEmpty()) {
-            locations.first().resolve()
-        } else {
-            CoordinateLocationData(Point.fromLngLat(longitude, latitude))
-        }
+        selectedLocation = Coordinate(longitude, latitude)
     }
 
     override fun clearSelection() {
