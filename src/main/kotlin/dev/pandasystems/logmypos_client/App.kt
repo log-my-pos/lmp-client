@@ -32,69 +32,69 @@ import org.koin.compose.koinInject
 @Preview
 @Composable
 fun AppPreview() = SetupPreview {
-	App()
+    App()
 }
 
 @OptIn(ExperimentalVoyagerApi::class)
 @Composable
 fun App() {
-	val globalData: GlobalData = koinInject()
-	val scope = rememberCoroutineScope()
+    val globalData: GlobalData = koinInject()
+    val scope = rememberCoroutineScope()
 
-	val repository: JournalRepository = koinInject()
-	val entries by repository.allEntries.collectAsState(emptyList())
-	val locationService: LocationService = koinInject()
+    val repository: JournalRepository = koinInject()
+    val entries by repository.allEntries.collectAsState(emptyList())
+    val locationService: LocationService = koinInject()
 
-	MaterialTheme(
-		typography = hankenGroteskTypography
-	) {
-		Surface(modifier = Modifier.fillMaxSize()) {
-			Navigator(LoginScreen()) { navigator ->
-				Box(Modifier.fillMaxSize()) {
-					MapboxMap(
-						Modifier.fillMaxSize(),
-						mapState = globalData.mapState,
-						mapViewportState = globalData.mapViewportState,
-						onMapClickListener = { point ->
-							scope.launch {
-								locationService.selectLocation(point.latitude(), point.longitude())
-							}
-							true
-						},
-						scaleBar = {},
-						logo = {},
-						attribution = {},
-						compass = {},
-						style = { MapStyle(style = "mapbox://styles/julianmaggio/cmoijn6tp002201sfdm0nab23") },
-						content = {
-							val marker = rememberIconImage(R.drawable.marker)
-							val selectedLocation = locationService.selectedLocation
-							if (selectedLocation != null) {
-								PointAnnotation(selectedLocation.coordinate) {
-									iconImage = marker
-									iconSize = 0.35
-									iconAnchor = IconAnchor.BOTTOM
-								}
-							}
+    MaterialTheme(
+        typography = hankenGroteskTypography
+    ) {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Navigator(LoginScreen()) { navigator ->
+                Box(Modifier.fillMaxSize()) {
+                    MapboxMap(
+                        Modifier.fillMaxSize(),
+                        mapState = globalData.mapState,
+                        mapViewportState = globalData.mapViewportState,
+                        onMapClickListener = { point ->
+                            scope.launch {
+                                locationService.selectLocation(point.latitude(), point.longitude())
+                            }
+                            true
+                        },
+                        scaleBar = {},
+                        logo = {},
+                        attribution = {},
+                        compass = {},
+                        style = { MapStyle(style = "mapbox://styles/julianmaggio/cmoijn6tp002201sfdm0nab23") },
+                        content = {
+                            val marker = rememberIconImage(R.drawable.marker)
+                            val selectedLocation = locationService.selectedLocation
+                            if (selectedLocation != null) {
+                                PointAnnotation(selectedLocation.coordinate) {
+                                    iconImage = marker
+                                    iconSize = 0.35
+                                    iconAnchor = IconAnchor.BOTTOM
+                                }
+                            } else {
+                                entries.forEach { entry ->
+                                    PointAnnotation(Point.fromLngLat(entry.longitude, entry.latitude)) {
+                                        iconImage = marker
+                                        iconSize = 0.35
+                                        iconAnchor = IconAnchor.BOTTOM
+                                        interactionsState.onClicked {
+                                            navigator.push(LocationDetailScreen(entry.id))
+                                            true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    )
 
-							entries.forEach { entry ->
-								PointAnnotation(Point.fromLngLat(entry.longitude, entry.latitude)) {
-									iconImage = marker
-									iconSize = 0.35
-									iconAnchor = IconAnchor.BOTTOM
-									interactionsState.onClicked {
-										navigator.push(LocationDetailScreen(entry.id))
-										true
-									}
-								}
-							}
-						}
-					)
-
-					// Composite the current active screen
-					CrossfadeTransition(navigator)
-				}
-			}
-		}
-	}
+                    // Composite the current active screen
+                    CrossfadeTransition(navigator)
+                }
+            }
+        }
+    }
 }

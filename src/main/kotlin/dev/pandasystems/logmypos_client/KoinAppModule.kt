@@ -18,8 +18,8 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val appModule = module {
-	single { AppDatabase.getDatabase(androidContext()) }
-	single { JournalRepositoryImpl(get<AppDatabase>().journalEntryDao()) } bind JournalRepository::class
+    single { AppDatabase.getDatabase(androidContext()) }
+    single { JournalRepositoryImpl(get<AppDatabase>().journalEntryDao()) } bind JournalRepository::class
     single { LocationServiceImpl() } bind LocationService::class
 
     single { GlobalData() } bind GlobalData::class
@@ -36,7 +36,6 @@ val previewModule = module {
 
     single { GlobalData() } bind GlobalData::class
 
-    // For simplicity in previews, we can use the real impl with mocks or just dummy data
     single { TokenManager(androidContext()) }
     single { LogMyPosApi(get()) }
     single { LocationApiService(get()) }
