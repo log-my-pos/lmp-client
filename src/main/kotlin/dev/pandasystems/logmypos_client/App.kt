@@ -14,6 +14,7 @@ import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.CrossfadeTransition
 import com.mapbox.geojson.Point
+import com.mapbox.maps.extension.compose.GesturesSettings
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.annotation.rememberIconImage
@@ -23,6 +24,7 @@ import dev.pandasystems.logmypos_client.models.GlobalData
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.screen.auth.LoginScreen
 import dev.pandasystems.logmypos_client.screen.location.JournalEntryScreen
+import dev.pandasystems.logmypos_client.screen.main.MainScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
 import dev.pandasystems.logmypos_client.utils.SetupPreview
@@ -50,16 +52,30 @@ fun App() {
     ) {
         Surface(modifier = Modifier.fillMaxSize()) {
             Navigator(LoginScreen()) { navigator ->
+                val isMainScreen = navigator.lastItem is MainScreen
                 Box(Modifier.fillMaxSize()) {
                     MapboxMap(
                         Modifier.fillMaxSize(),
                         mapState = globalData.mapState,
                         mapViewportState = globalData.mapViewportState,
+                        gesturesSettings = GesturesSettings {
+                            scrollEnabled = isMainScreen
+                            pinchToZoomEnabled = isMainScreen
+                            doubleTapToZoomInEnabled = isMainScreen
+                            doubleTouchToZoomOutEnabled = isMainScreen
+                            quickZoomEnabled = isMainScreen
+                            rotateEnabled = isMainScreen
+                            pitchEnabled = isMainScreen
+                        },
                         onMapClickListener = { point ->
-                            scope.launch {
-                                locationService.selectLocation(point.latitude(), point.longitude())
+                            if (isMainScreen) {
+                                scope.launch {
+                                    locationService.selectLocation(point.latitude(), point.longitude())
+                                }
+                                true
+                            } else {
+                                false
                             }
-                            true
                         },
                         scaleBar = {},
                         logo = {},
@@ -82,8 +98,12 @@ fun App() {
                                         iconSize = 0.35
                                         iconAnchor = IconAnchor.BOTTOM
                                         interactionsState.onClicked {
-                                            navigator.push(JournalEntryScreen(entry.id))
-                                            true
+                                            if (isMainScreen) {
+                                                navigator.push(JournalEntryScreen(entry.id))
+                                                true
+                                            } else {
+                                                false
+                                            }
                                         }
                                     }
                                 }
