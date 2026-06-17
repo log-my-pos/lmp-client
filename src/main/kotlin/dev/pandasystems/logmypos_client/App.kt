@@ -82,7 +82,7 @@ fun App() {
                                         iconSize = 0.35
                                         iconAnchor = IconAnchor.BOTTOM
                                         interactionsState.onClicked {
-                                            navigator.push(JournalEntryScreen(/*entry.id*/))
+                                            navigator.push(JournalEntryScreen(entry.id))
                                             true
                                         }
                                     }
