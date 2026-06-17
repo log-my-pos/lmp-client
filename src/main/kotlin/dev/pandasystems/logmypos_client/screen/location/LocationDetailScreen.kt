@@ -18,9 +18,12 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.composables.icons.tabler.Tabler
-import com.composables.icons.tabler.outline.*
+import com.composables.icons.tabler.outline.ArrowLeft
+import com.composables.icons.tabler.outline.Edit
+import com.composables.icons.tabler.outline.MapPin
+import com.composables.icons.tabler.outline.Trash
 import dev.pandasystems.logmypos_client.data.JournalEntry
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.utils.SetupPreviewScreen

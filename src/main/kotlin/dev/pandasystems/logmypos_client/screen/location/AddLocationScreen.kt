@@ -26,7 +26,7 @@ import androidx.work.*
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import coil.compose.AsyncImage
+import coil3.compose.AsyncImage
 import com.composables.icons.tabler.Tabler
 import com.composables.icons.tabler.outline.ArrowLeft
 import com.composables.icons.tabler.outline.Camera
@@ -302,6 +302,11 @@ data class AddLocationScreen(
 			}
 		}
 	}
+
+    @Composable
+    fun AsyncImage(model: String, contentDescription: Nothing?, modifier: Modifier, contentScale: ContentScale) {
+        TODO("Not yet implemented")
+    }
 
     private fun triggerSync(context: android.content.Context) {
         val constraints = Constraints.Builder()

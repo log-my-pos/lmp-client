@@ -71,7 +71,9 @@ dependencies {
 	implementation(libs.tablericons.outline)
 	implementation(libs.tablericons.filled)
 
-	implementation(libs.coil)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.ktor)
+	
 	implementation(libs.androidx.exifinterface)
 	implementation(libs.play.services.location)
 

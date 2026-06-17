@@ -7,9 +7,7 @@ import dev.pandasystems.logmypos_client.models.GlobalData
 import dev.pandasystems.logmypos_client.repository.FakeJournalRepositoryImpl
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.repository.JournalRepositoryImpl
-import dev.pandasystems.logmypos_client.services.auth.AuthService
-import dev.pandasystems.logmypos_client.services.auth.AuthServiceImpl
-import dev.pandasystems.logmypos_client.services.auth.TokenManager
+import dev.pandasystems.logmypos_client.services.auth.*
 import dev.pandasystems.logmypos_client.services.location.FakeLocationServiceImpl
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.services.location.LocationServiceImpl
@@ -24,7 +22,7 @@ val appModule = module {
 
     single { GlobalData() } bind GlobalData::class
 
-    single { TokenManager(androidContext()) }
+    single { TokenManagerImpl(androidContext()) } bind TokenManager::class
     single { LogMyPosApi(get()) }
     single { LocationApiService(get()) }
     single { AuthServiceImpl(get(), get()) } bind AuthService::class
@@ -36,7 +34,7 @@ val previewModule = module {
 
     single { GlobalData() } bind GlobalData::class
 
-    single { TokenManager(androidContext()) }
+    single { FakeTokenManager() } bind TokenManager::class
     single { LogMyPosApi(get()) }
     single { LocationApiService(get()) }
     single { AuthServiceImpl(get(), get()) } bind AuthService::class

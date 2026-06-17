@@ -8,4 +8,6 @@ object Colors {
 	val background = Color(0xFFFFFFFF)
 	val backgroundSecondary = Color(0xFFE6E6E5)
 	val shadow = Color(0x80000000)
+
+    val borderColor = Color(0xFFFAFAF9)
 }

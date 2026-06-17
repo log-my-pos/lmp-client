@@ -22,7 +22,7 @@ import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import dev.pandasystems.logmypos_client.models.GlobalData
 import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.screen.auth.LoginScreen
-import dev.pandasystems.logmypos_client.screen.location.LocationDetailScreen
+import dev.pandasystems.logmypos_client.screen.location.JournalEntryScreen
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.hankenGroteskTypography
 import dev.pandasystems.logmypos_client.utils.SetupPreview
@@ -82,7 +82,7 @@ fun App() {
                                         iconSize = 0.35
                                         iconAnchor = IconAnchor.BOTTOM
                                         interactionsState.onClicked {
-                                            navigator.push(LocationDetailScreen(entry.id))
+                                            navigator.push(JournalEntryScreen(/*entry.id*/))
                                             true
                                         }
                                     }
