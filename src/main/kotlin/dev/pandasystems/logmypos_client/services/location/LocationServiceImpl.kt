@@ -42,7 +42,7 @@ class LocationServiceImpl : LocationService {
     }
 
     override suspend fun selectLocation(latitude: Double, longitude: Double) {
-        selectedLocation = Coordinate(longitude, latitude)
+        selectedLocation = Coordinate(latitude, longitude)
     }
 
     override fun clearSelection() {

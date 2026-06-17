@@ -51,11 +51,11 @@ fun LocationViewOverlay() {
 
     LaunchedEffect(locationCoords) {
         isLoading = true
-        locationEntry = locationService
-            .findLocations(locationCoords.latitude, locationCoords.longitude)
+        val locations = locationService.findLocations(locationCoords.latitude, locationCoords.longitude)
+        println(locations)
+        locationEntry = locations
             .firstOrNull()
             ?.resolve()
-
         println(locationEntry)
 
         val zoom = if (locationEntry != null) {

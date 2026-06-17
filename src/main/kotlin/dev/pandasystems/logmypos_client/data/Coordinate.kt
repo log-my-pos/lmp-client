@@ -7,7 +7,7 @@ class Coordinate(
     val longitude: Double
 ) {
     val asPair get() = Pair(latitude, longitude)
-    val asMapBoxPoint get(): Point = Point.fromLngLat(latitude, longitude)
+    val asMapBoxPoint get(): Point = Point.fromLngLat(longitude, latitude)
 
     override fun toString(): String = "$latitude, $longitude"
 }
