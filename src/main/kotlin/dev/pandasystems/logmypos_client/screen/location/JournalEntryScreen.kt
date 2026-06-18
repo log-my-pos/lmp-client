@@ -440,24 +440,7 @@ class JournalEntryScreen(
                         enabled = isFormValid,
 						onClick = {
 							scope.launch {
-								var synced = false
-								if (isLoggedIn) {
-									val response = if (entryId == null) {
-										locationApiService.createLocation(
-											title = editedTitle,
-											description = editedDescription,
-											latitude = latitude ?: 0.0,
-                                            longitude = longitude ?: 0.0,
-                                            creationDate = kotlinx.datetime.Instant.fromEpochMilliseconds(System.currentTimeMillis())
-                                                .toLocalDateTime(TimeZone.currentSystemDefault())
-										)
-									} else {
-										null
-									}
-									synced = response != null
-								}
-
-								val updatedEntry = JournalEntry(
+                                val newEntry = JournalEntry(
 									id = entryId ?: 0L,
 									title = editedTitle,
 									description = editedDescription,
@@ -469,16 +452,15 @@ class JournalEntryScreen(
                                         ?: kotlinx.datetime.Instant.fromEpochMilliseconds(System.currentTimeMillis())
                                             .toLocalDateTime(TimeZone.currentSystemDefault()),
 									imagePaths = editedImagePaths,
-									isSynced = synced
 								)
 
 								if (entryId == null) {
-									repository.insert(updatedEntry)
+                                    repository.insert(newEntry)
 								} else {
-									repository.update(updatedEntry)
+                                    repository.update(newEntry)
 								}
 
-								if (isLoggedIn && !synced) {
+                                if (isLoggedIn) {
                                     SyncUtils.triggerSync(context)
 								}
 
@@ -486,7 +468,7 @@ class JournalEntryScreen(
 									locationService.clearSelection()
 									navigator.pop()
 								} else {
-									entry = updatedEntry
+                                    entry = newEntry
 									isEditingTitle = false
 									isEditingDescription = false
 								}
@@ -510,6 +492,7 @@ class JournalEntryScreen(
 							onClick = {
 								scope.launch {
 									entry?.let { repository.delete(it) }
+                                    SyncUtils.triggerSync(context)
 									navigator.pop()
 								}
 							},

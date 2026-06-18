@@ -1,6 +1,7 @@
 package dev.pandasystems.logmypos_client.api
 
 import dev.pandasystems.logmypos_client.api.models.*
+import dev.pandasystems.logmypos_client.utils.Logger
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
@@ -12,6 +13,8 @@ import java.io.File
 import kotlin.uuid.Uuid
 
 class LocationApiService(private val api: LogMyPosApi) {
+    val logger = Logger("LocationApiService")
+    
     suspend fun createLocation(
         title: String,
         description: String?,
@@ -103,6 +106,12 @@ class LocationApiService(private val api: LogMyPosApi) {
     }
 
     suspend fun uploadImages(locationId: Uuid, imagePaths: List<String>): ImageUploadResponse? {
+        if (imagePaths.isEmpty()) {
+            logger.warning("No images to upload")
+            return null
+        }
+
+        logger.debug("Uploading images for location $locationId")
         return try {
             val response = api.client.post("/api/locations/image/$locationId") {
                 setBody(
@@ -110,10 +119,25 @@ class LocationApiService(private val api: LogMyPosApi) {
                         formData {
                             imagePaths.forEach { path ->
                                 val file = File(path)
+                                logger.debug("Uploading image: $path")
+                                
                                 if (file.exists()) {
+                                    logger.debug("Appending image to form data")
+
+                                    val mimeType = when (file.extension.lowercase()) {
+                                        "jpg", "jpeg" -> "image/jpeg"
+                                        "png" -> "image/png"
+                                        "webp" -> "image/webp"
+                                        "gif" -> "image/gif"
+                                        else -> "application/octet-stream"
+                                    }
+                                    
                                     append("images", file.readBytes(), Headers.build {
-                                        append(HttpHeaders.ContentType, "image/${file.extension}")
-                                        append(HttpHeaders.ContentDisposition, "filename=\"${file.name}\"")
+                                        append(HttpHeaders.ContentType, mimeType)
+                                        append(
+                                            HttpHeaders.ContentDisposition,
+                                            "form-data; name=\"images\"; filename=\"${file.name}\""
+                                        )
                                     })
                                 }
                             }
@@ -122,8 +146,11 @@ class LocationApiService(private val api: LogMyPosApi) {
                 )
             }
             if (response.status == HttpStatusCode.OK) {
-                response.body<ImageUploadResponse>()
+                response.body<ImageUploadResponse>().also {
+                    logger.debug("Images uploaded successfully")
+                }
             } else {
+                logger.error("Failed to upload images: ${response.status}")
                 null
             }
         } catch (e: Exception) {
