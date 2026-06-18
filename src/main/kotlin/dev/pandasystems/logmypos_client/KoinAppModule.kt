@@ -13,24 +13,28 @@ import dev.pandasystems.logmypos_client.services.location.LocationServiceImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import org.koin.plugin.module.dsl.single
 
 val appModule = module {
     single { AppDatabase.getDatabase(androidContext()) }
-    single { JournalRepositoryImpl(get<AppDatabase>().journalEntryDao()) } bind JournalRepository::class
-    single { LocationServiceImpl() } bind LocationService::class
+    single {
+        val db = get<AppDatabase>()
+        JournalRepositoryImpl(db.journalEntryDao(), db.deletedEntryDao())
+    } bind JournalRepository::class
+    single<LocationServiceImpl>() bind LocationService::class
 
     single { TokenManagerImpl(androidContext()) } bind TokenManager::class
-    single { LogMyPosApi(get()) }
-    single { LocationApiService(get()) }
-    single { AuthServiceImpl(get(), get()) } bind AuthService::class
+    single<LogMyPosApi>()
+    single<LocationApiService>()
+    single<AuthServiceImpl>() bind AuthService::class
 }
 
 val previewModule = module {
-    single { FakeJournalRepositoryImpl() } bind JournalRepository::class
-    single { FakeLocationService() } bind LocationService::class
+    single<FakeJournalRepositoryImpl>() bind JournalRepository::class
+    single<FakeLocationService>() bind LocationService::class
 
-    single { FakeTokenManager() } bind TokenManager::class
-    single { LogMyPosApi(get()) }
-    single { LocationApiService(get()) }
-    single { FakeAuthService() } bind AuthService::class
+    single<FakeTokenManager>() bind TokenManager::class
+    single<LogMyPosApi>()
+    single<LocationApiService>()
+    single<FakeAuthService>() bind AuthService::class
 }

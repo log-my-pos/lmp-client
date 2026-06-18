@@ -82,22 +82,20 @@ class ProfileScreen : Screen {
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = if (unsyncedEntries.isEmpty()) "All entries synced" else "${unsyncedEntries.size} entries pending sync",
+                        text = if (unsyncedEntries.isEmpty()) "All local entries synced" else "${unsyncedEntries.size} local entries pending sync",
                         fontSize = 14.sp,
                         color = Colors.text
                     )
-                    if (unsyncedEntries.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Button(
-                            onClick = { SyncUtils.triggerSync(context) },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Colors.text,
-                                contentColor = Colors.background
-                            )
-                        ) {
-                            Text("Sync Now")
-                        }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(
+                        onClick = { SyncUtils.triggerSync(context) },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Colors.text,
+                            contentColor = Colors.background
+                        )
+                    ) {
+                        Text("Sync Now")
                     }
                 }
             }

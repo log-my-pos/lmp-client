@@ -146,7 +146,7 @@ class JournalEntryScreen(
                     description = "",
                     latitude = latitude,
                     longitude = longitude,
-                    address = currentLocation?.address?.formattedAddress ?: currentLocation?.name,
+//                    address = currentLocation?.address?.formattedAddress ?: currentLocation?.name,
                     date = kotlinx.datetime.Instant.fromEpochMilliseconds(System.currentTimeMillis())
                         .toLocalDateTime(TimeZone.currentSystemDefault()),
                     imagePaths = emptyList()
@@ -381,7 +381,7 @@ class JournalEntryScreen(
                                     )
                                     Spacer(Modifier.width(4.dp))
                                     Text(
-                                        if (!entry!!.address.isNullOrBlank()) entry!!.address!! else "${entry!!.latitude}, ${entry!!.longitude}",
+                                        "${entry!!.latitude}, ${entry!!.longitude}",
                                         style = TextStyle(
                                             fontSize = 12.sp,
                                             color = Colors.text.copy(alpha = 0.4f)
@@ -463,8 +463,8 @@ class JournalEntryScreen(
 									description = editedDescription,
 									latitude = entry?.latitude ?: latitude ?: 0.0,
 									longitude = entry?.longitude ?: longitude ?: 0.0,
-									address = entry?.address ?: currentLocation?.address?.formattedAddress
-									?: currentLocation?.name,
+//									address = entry?.address ?: currentLocation?.address?.formattedAddress
+//									?: currentLocation?.name,
                                     date = entry?.date
                                         ?: kotlinx.datetime.Instant.fromEpochMilliseconds(System.currentTimeMillis())
                                             .toLocalDateTime(TimeZone.currentSystemDefault()),
@@ -740,7 +740,7 @@ class JournalEntryScreen(
 							HorizontalDivider(color = Colors.borderColor.copy(alpha = 0.5f))
 							Spacer(Modifier.height(16.dp))
 							Text(
-								if (!entry!!.address.isNullOrBlank()) entry!!.address!! else "${entry!!.latitude}, ${entry!!.longitude}",
+                                "${entry!!.latitude}, ${entry!!.longitude}",
 								style = TextStyle(
 									fontSize = 14.sp,
 									color = Colors.text.copy(alpha = 0.6f)

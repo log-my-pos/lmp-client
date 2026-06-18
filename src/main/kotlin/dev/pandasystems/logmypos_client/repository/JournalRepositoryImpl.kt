@@ -1,10 +1,15 @@
 package dev.pandasystems.logmypos_client.repository
 
+import dev.pandasystems.logmypos_client.data.DeletedEntry
+import dev.pandasystems.logmypos_client.data.DeletedEntryDao
 import dev.pandasystems.logmypos_client.data.JournalEntry
 import dev.pandasystems.logmypos_client.data.JournalEntryDao
 import kotlinx.coroutines.flow.Flow
 
-class JournalRepositoryImpl(private val journalEntryDao: JournalEntryDao) : JournalRepository {
+class JournalRepositoryImpl(
+    private val journalEntryDao: JournalEntryDao,
+    private val deletedEntryDao: DeletedEntryDao
+) : JournalRepository {
     override val allEntries: Flow<List<JournalEntry>> = journalEntryDao.getAllEntries()
 
     override val unsyncedEntries: Flow<List<JournalEntry>> = journalEntryDao.getUnsyncedEntriesFlow()
@@ -22,6 +27,9 @@ class JournalRepositoryImpl(private val journalEntryDao: JournalEntryDao) : Jour
     }
 
     override suspend fun delete(entry: JournalEntry) {
+        entry.cloudId?.let { cloudId ->
+            deletedEntryDao.insertDeletedEntry(DeletedEntry(cloudId))
+        }
         journalEntryDao.deleteEntry(entry)
     }
 
@@ -31,5 +39,13 @@ class JournalRepositoryImpl(private val journalEntryDao: JournalEntryDao) : Jour
 
     override suspend fun getEntryByCloudId(cloudId: kotlin.uuid.Uuid): JournalEntry? {
         return journalEntryDao.getEntryByCloudId(cloudId)
+    }
+
+    override suspend fun getDeletedEntries(): List<DeletedEntry> {
+        return deletedEntryDao.getAllDeletedEntries()
+    }
+
+    override suspend fun removeDeletedEntry(cloudId: kotlin.uuid.Uuid) {
+        deletedEntryDao.deleteByCloudId(cloudId)
     }
 }

@@ -55,7 +55,7 @@ class AllLocationsScreen : Screen {
                 entries
             } else {
                 entries.filter {
-                    it.title.lowercase().contains(query) || (it.address?.lowercase()?.contains(query) ?: false)
+                    it.title.lowercase().contains(query)
                 }
             }
         }
@@ -162,13 +162,13 @@ class AllLocationsScreen : Screen {
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(
-                        text = entry.address ?: "No address",
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+//                    Text(
+//                        text = entry.address ?: "No address",
+//                        fontSize = 14.sp,
+//                        color = Color.Gray,
+//                        maxLines = 1,
+//                        overflow = TextOverflow.Ellipsis
+//                    )
                 }
             }
         }

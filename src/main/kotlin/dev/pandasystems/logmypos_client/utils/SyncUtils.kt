@@ -5,6 +5,8 @@ import androidx.work.*
 import dev.pandasystems.logmypos_client.worker.SyncWorker
 
 object SyncUtils {
+    const val SYNC_WORK_NAME = "JournalSync"
+
     fun triggerSync(context: Context) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -15,8 +17,8 @@ object SyncUtils {
             .build()
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-            "LocationSync",
-            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            SYNC_WORK_NAME,
+            ExistingWorkPolicy.KEEP,
             syncRequest
         )
     }

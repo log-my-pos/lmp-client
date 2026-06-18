@@ -3,6 +3,7 @@ package dev.pandasystems.logmypos_client
 import android.app.Application
 import androidx.work.*
 import com.mapbox.common.MapboxOptions
+import dev.pandasystems.logmypos_client.utils.SyncUtils
 import dev.pandasystems.logmypos_client.worker.SyncWorker
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -24,19 +25,7 @@ class LogMyPosApplication : Application() {
     }
 
     private fun triggerInitialSync() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(this).enqueueUniqueWork(
-            "InitialSync",
-            ExistingWorkPolicy.REPLACE,
-            syncRequest
-        )
+        SyncUtils.triggerSync(this)
     }
 
     private fun setupPeriodicSync() {

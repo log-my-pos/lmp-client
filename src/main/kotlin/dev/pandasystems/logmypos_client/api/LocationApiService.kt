@@ -73,7 +73,7 @@ class LocationApiService(private val api: LogMyPosApi) {
             null
         }
     }
-    
+
     suspend fun getLocation(id: Uuid): LocationResponse? {
         return try {
             val response = api.client.get("/api/locations/$id/")
@@ -107,18 +107,19 @@ class LocationApiService(private val api: LogMyPosApi) {
             val response = api.client.post("/api/locations/image/$locationId") {
                 setBody(
                     MultiPartFormDataContent(
-                    formData {
-                        imagePaths.forEach { path ->
-                            val file = File(path)
-                            if (file.exists()) {
-                                append("images", file.readBytes(), Headers.build {
-                                    append(HttpHeaders.ContentType, "image/jpeg")
-                                    append(HttpHeaders.ContentDisposition, "filename=\"${file.name}\"")
-                                })
+                        formData {
+                            imagePaths.forEach { path ->
+                                val file = File(path)
+                                if (file.exists()) {
+                                    append("images", file.readBytes(), Headers.build {
+                                        append(HttpHeaders.ContentType, "image/${file.extension}")
+                                        append(HttpHeaders.ContentDisposition, "filename=\"${file.name}\"")
+                                    })
+                                }
                             }
                         }
-                    }
-                ))
+                    )
+                )
             }
             if (response.status == HttpStatusCode.OK) {
                 response.body<ImageUploadResponse>()
@@ -142,6 +143,16 @@ class LocationApiService(private val api: LogMyPosApi) {
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
+        }
+    }
+
+    suspend fun deleteLocation(id: Uuid): Boolean {
+        return try {
+            val response = api.client.delete("/api/locations/$id")
+            response.status == HttpStatusCode.OK
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
     }
 }
