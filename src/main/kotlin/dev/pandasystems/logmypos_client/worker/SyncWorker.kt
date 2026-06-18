@@ -26,14 +26,36 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
         var allSuccess = true
         for (entry in unsynced) {
             try {
-                val response = apiService.createLocation(
-                    title = entry.title,
-                    description = entry.description,
-                    latitude = entry.latitude,
-                    longitude = entry.longitude
-                )
+                val existing = if (entry.cloudId != null)
+                    apiService.getLocation(entry.cloudId)
+                else null
+
+                val response = if (existing == null) {
+                    apiService.createLocation(
+                        title = entry.title,
+                        description = entry.description,
+                        latitude = entry.latitude,
+                        longitude = entry.longitude,
+                        creationDate = entry.date
+                    )
+                } else {
+                    apiService.updateLocation(
+                        id = existing.data.id,
+                        title = entry.title,
+                        description = entry.description,
+                        latitude = entry.latitude,
+                        longitude = entry.longitude,
+                    )
+                }
+                
                 if (response != null) {
-                    repository.update(entry.copy(isSynced = true))
+                    response.data.id
+                    repository.update(
+                        entry.copy(
+                            isSynced = true,
+                            cloudId = response.data.id
+                        )
+                    )
                 } else {
                     allSuccess = false
                 }

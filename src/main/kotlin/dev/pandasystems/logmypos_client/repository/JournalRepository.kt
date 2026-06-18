@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.flowOf
 interface JournalRepository {
     val allEntries: Flow<List<JournalEntry>>
 
+    val unsyncedEntries: Flow<List<JournalEntry>>
+
     suspend fun getEntryById(id: Long): JournalEntry?
 
     suspend fun insert(entry: JournalEntry): Long
@@ -34,6 +36,8 @@ class FakeJournalRepositoryImpl : JournalRepository {
             )
         )
     )
+
+    override val unsyncedEntries: Flow<List<JournalEntry>> = flowOf(emptyList())
 
     override suspend fun getEntryById(id: Long): JournalEntry {
         return JournalEntry(

@@ -14,6 +14,9 @@ interface JournalEntryDao {
     @Query("SELECT * FROM journal_entries WHERE isSynced = 0")
     suspend fun getUnsyncedEntries(): List<JournalEntry>
 
+    @Query("SELECT * FROM journal_entries WHERE isSynced = 0")
+    fun getUnsyncedEntriesFlow(): Flow<List<JournalEntry>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEntry(entry: JournalEntry): Long
 

@@ -75,327 +75,329 @@ import java.io.FileOutputStream
 private fun PreviewBaseJournalScreen() = SetupPreviewScreen(JournalEntryScreen(0L))
 
 class JournalEntryScreen(
-	val entryId: Long? = null,
-	val latitude: Double? = null,
-	val longitude: Double? = null,
-	val initialImageUris: List<String> = emptyList()
+    val entryId: Long? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val initialImageUris: List<String> = emptyList()
 ) : Screen {
-	@Composable
-	override fun Content() {
-		val repository = koinInject<JournalRepository>()
-		val locationService: LocationService = koinInject()
-		val locationApiService: LocationApiService = koinInject()
-		val authService: AuthService = koinInject()
-		val isLoggedIn by authService.isLoggedIn.collectAsState()
+    @Composable
+    override fun Content() {
+        val repository = koinInject<JournalRepository>()
+        val locationService: LocationService = koinInject()
+        val locationApiService: LocationApiService = koinInject()
+        val authService: AuthService = koinInject()
+        val isLoggedIn by authService.isLoggedIn.collectAsState()
 
-		var entry by remember { mutableStateOf<JournalEntry?>(null) }
-		var isLoading by remember { mutableStateOf(entryId != null) }
+        var entry by remember { mutableStateOf<JournalEntry?>(null) }
+        var isLoading by remember { mutableStateOf(entryId != null) }
 
-		var showPhotoViewer by remember { mutableStateOf(false) }
-		var showDetailsModal by remember { mutableStateOf(false) }
+        var showPhotoViewer by remember { mutableStateOf(false) }
+        var showDetailsModal by remember { mutableStateOf(false) }
 
-		var isEditingTitle by remember { mutableStateOf(false) }
-		var editedTitle by remember { mutableStateOf("") }
-		var isEditingDescription by remember { mutableStateOf(false) }
-		var editedDescription by remember { mutableStateOf("") }
-		var editedImagePaths by remember { mutableStateOf<List<String>>(emptyList()) }
-		var currentLocation by remember { mutableStateOf<LocationData?>(null) }
+        var isEditingTitle by remember { mutableStateOf(false) }
+        var editedTitle by remember { mutableStateOf("") }
+        var isEditingDescription by remember { mutableStateOf(false) }
+        var editedDescription by remember { mutableStateOf("") }
+        var editedImagePaths by remember { mutableStateOf<List<String>>(emptyList()) }
+        var currentLocation by remember { mutableStateOf<LocationData?>(null) }
 
-		var showDeleteEntryConfirmation by remember { mutableStateOf(false) }
-		var showDeletePhotoConfirmation by remember { mutableStateOf(false) }
+        var showDeleteEntryConfirmation by remember { mutableStateOf(false) }
+        var showDeletePhotoConfirmation by remember { mutableStateOf(false) }
 
-		val navigator = LocalNavigator.currentOrThrow
-		val scope = rememberCoroutineScope()
-		val context = LocalContext.current
-		val focusManager = LocalFocusManager.current
-		val titleFocusRequester = remember { FocusRequester() }
-		val descriptionFocusRequester = remember { FocusRequester() }
-		val modalTitleFocusRequester = remember { FocusRequester() }
+        val navigator = LocalNavigator.currentOrThrow
+        val scope = rememberCoroutineScope()
+        val context = LocalContext.current
+        val focusManager = LocalFocusManager.current
+        val titleFocusRequester = remember { FocusRequester() }
+        val descriptionFocusRequester = remember { FocusRequester() }
+        val modalTitleFocusRequester = remember { FocusRequester() }
 
-		val mapViewportState = LocalMapViewportStateProvider.current
+        val mapViewportState = LocalMapViewportStateProvider.current
 
-		val photoPickerLauncher = rememberLauncherForActivityResult(
-			contract = ActivityResultContracts.PickMultipleVisualMedia(),
-			onResult = { uris ->
-				scope.launch {
-					val newImagePaths = uris.mapNotNull { uri ->
-						saveImageToInternalStorage(context, uri)
-					}
-					editedImagePaths = editedImagePaths + newImagePaths
-				}
-			}
-		)
+        val photoPickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickMultipleVisualMedia(),
+            onResult = { uris ->
+                scope.launch {
+                    val newImagePaths = uris.mapNotNull { uri ->
+                        saveImageToInternalStorage(context, uri)
+                    }
+                    editedImagePaths = editedImagePaths + newImagePaths
+                }
+            }
+        )
 
-		LaunchedEffect(entryId) {
-			if (entryId != null) {
-				entry = repository.getEntryById(entryId)
-				if (entry != null) {
-					editedTitle = entry!!.title
-					editedDescription = entry!!.description
-					editedImagePaths = entry!!.imagePaths
-					isLoading = false
+        LaunchedEffect(entryId) {
+            if (entryId != null) {
+                entry = repository.getEntryById(entryId)
+                if (entry != null) {
+                    editedTitle = entry!!.title
+                    editedDescription = entry!!.description
+                    editedImagePaths = entry!!.imagePaths
+                    isLoading = false
 
-					mapViewportState.flyTo(cameraOptions {
-						center(Point.fromLngLat(entry!!.longitude, entry!!.latitude))
-						zoom(15.0)
-					})
-				}
-			} else if (latitude != null && longitude != null) {
-				currentLocation = locationService.findLocations(longitude, latitude).firstOrNull()?.resolve()
+                    mapViewportState.flyTo(cameraOptions {
+                        center(Point.fromLngLat(entry!!.longitude, entry!!.latitude))
+                        zoom(15.0)
+                    })
+                }
+            } else if (latitude != null && longitude != null) {
+                currentLocation = locationService.findLocations(longitude, latitude).firstOrNull()?.resolve()
 
-				val newEntry = JournalEntry(
-					title = "",
-					description = "",
-					latitude = latitude,
-					longitude = longitude,
-					address = currentLocation?.address?.formattedAddress ?: currentLocation?.name,
-					date = System.currentTimeMillis(),
-					imagePaths = emptyList()
-				)
-				entry = newEntry
-				editedTitle = ""
-				editedDescription = ""
-				editedImagePaths =
-					initialImageUris.mapNotNull { saveImageToInternalStorage(context, android.net.Uri.parse(it)) }
-				isLoading = false
+                val newEntry = JournalEntry(
+                    title = "",
+                    description = "",
+                    latitude = latitude,
+                    longitude = longitude,
+                    address = currentLocation?.address?.formattedAddress ?: currentLocation?.name,
+                    date = System.currentTimeMillis(),
+                    imagePaths = emptyList()
+                )
+                entry = newEntry
+                editedTitle = ""
+                editedDescription = ""
+                editedImagePaths =
+                    initialImageUris.mapNotNull { saveImageToInternalStorage(context, android.net.Uri.parse(it)) }
+                isLoading = false
 
-				mapViewportState.flyTo(cameraOptions {
-					center(Point.fromLngLat(longitude, latitude))
-					zoom(15.0)
-				})
-			}
-		}
+                mapViewportState.flyTo(cameraOptions {
+                    center(Point.fromLngLat(longitude, latitude))
+                    zoom(15.0)
+                })
+            }
+        }
 
-		Box(Modifier
-			.fillMaxSize()
-			.systemBarsPadding()) {
-			Column(
-				Modifier.fillMaxSize(),
-				horizontalAlignment = Alignment.CenterHorizontally,
-				verticalArrangement = Arrangement.SpaceEvenly
-			) {
-				Spacer(Modifier.height(56.dp)) // For Top Bar
-				Card(-11f, onClick = { if (!isLoading) showPhotoViewer = true }) {
-					if (isLoading) {
-						Box(
-							Modifier.fillMaxSize(),
-							contentAlignment = Alignment.Center
-						) { CircularProgressIndicator() }
-					} else if (entry != null) {
-						val hazeState = rememberHazeState()
+        Box(
+            Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+        ) {
+            Column {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Surface(
+                        onClick = { navigator.pop() },
+                        shape = CircleShape,
+                        color = Colors.background,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Tabler.Outline.ArrowLeft, contentDescription = "Back", modifier = Modifier.size(20.dp))
+                        }
+                    }
 
-						Box(
-							Modifier
-								.fillMaxSize()
-						) {
-							if (editedImagePaths.isEmpty()) {
-								Image(
-									Tabler.Outline.PhotoX,
-									contentDescription = null,
-									modifier = Modifier
-										.align(Alignment.Center)
-										.size(128.dp),
-									colorFilter = ColorFilter.tint(Colors.text.copy(alpha = 0.2f))
-								)
-							} else {
-								AsyncImage(
-									model = editedImagePaths.first(),
-									contentDescription = null,
-									modifier = Modifier
-										.fillMaxSize()
-										.hazeSource(hazeState),
-									contentScale = ContentScale.Crop
-								)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isEditingTitle) {
+                            BasicTextField(
+                                value = editedTitle,
+                                onValueChange = { editedTitle = it },
+                                textStyle = TextStyle(
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    color = Colors.text
+                                ),
+                                modifier = Modifier
+                                    .focusRequester(titleFocusRequester)
+                                    .fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                                keyboardActions = KeyboardActions(onDone = {
+                                    isEditingTitle = false
+                                    focusManager.clearFocus()
+                                }),
+                                singleLine = true
+                            )
+                            LaunchedEffect(Unit) {
+                                titleFocusRequester.requestFocus()
+                            }
+                        } else {
+                            Text(
+                                editedTitle.ifBlank { if (entryId == null) "New Entry" else "No Title" },
+                                style = TextStyle(
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (editedTitle.isBlank()) Colors.text.copy(alpha = 0.5f) else Colors.text
+                                ),
+                                modifier = Modifier.clickable { isEditingTitle = true },
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
 
-								val blurStyle = CupertinoMaterials.ultraThin(Color(0x66272726))
-								val shape = CircleShape
+                    if (entryId != null) {
+                        Surface(
+                            onClick = { showDeleteEntryConfirmation = true },
+                            shape = CircleShape,
+                            color = Colors.background,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Tabler.Outline.Trash,
+                                    contentDescription = "Delete",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        Spacer(Modifier.size(40.dp))
+                    }
+                }
 
-								Box(
-									Modifier
-										.padding(8.dp)
-										.align(Alignment.BottomStart)
-										.clip(shape)
-										.hazeEffect(hazeState) {
-											blurEffect {
-												style = blurStyle
-											}
-										}
-										.padding(8.dp, 4.dp)
-								) {
-									Text(
-										editedImagePaths.size.toString(),
-										color = Color(0xFFFFFFFF),
-									)
-								}
-							}
-						}
-					}
-				}
-				Card(9.54f, onClick = { if (!isLoading) showDetailsModal = true }) {
-					if (isLoading) {
-						Box(
-							Modifier.fillMaxSize(),
-							contentAlignment = Alignment.Center
-						) { CircularProgressIndicator() }
-					} else if (entry != null) {
-						Column(
-							Modifier
-								.fillMaxSize()
-								.padding(16.dp),
-							horizontalAlignment = Alignment.CenterHorizontally,
-							verticalArrangement = Arrangement.Center
-						) {
-							Row(
-								verticalAlignment = Alignment.CenterVertically,
-								horizontalArrangement = Arrangement.Center
-							) {
-								Icon(
-									Tabler.Outline.Calendar,
-									contentDescription = null,
-									modifier = Modifier.size(16.dp),
-									tint = Colors.text.copy(alpha = 0.5f)
-								)
-								Spacer(Modifier.width(4.dp))
-								val localDateTime = Instant.fromEpochMilliseconds(entry!!.date)
-									.toLocalDateTime(TimeZone.currentSystemDefault())
-								val dateString =
-									"${localDateTime.dayOfMonth} ${
-										localDateTime.month.name.lowercase()
-											.replaceFirstChar { it.uppercase() }
-									} ${localDateTime.year}"
-								Text(
-									dateString,
-									style = TextStyle(
-										fontSize = 14.sp,
-										fontWeight = FontWeight.Medium,
-										color = Colors.text.copy(alpha = 0.5f)
-									)
-								)
-							}
-							Spacer(Modifier.height(12.dp))
-							Text(
-								editedDescription.ifBlank { "Add a description..." },
-								style = TextStyle(
-									fontSize = 16.sp,
-									color = if (editedDescription.isBlank()) Colors.text.copy(alpha = 0.5f) else Colors.text,
-									lineHeight = 22.sp
-								),
-								maxLines = 3,
-								overflow = TextOverflow.Ellipsis,
-								textAlign = TextAlign.Center
-							)
-							Spacer(Modifier.height(12.dp))
-							Row(
-								verticalAlignment = Alignment.CenterVertically,
-								horizontalArrangement = Arrangement.Center,
-								modifier = Modifier.padding(horizontal = 8.dp)
-							) {
-								Icon(
-									Tabler.Outline.MapPin,
-									contentDescription = null,
-									modifier = Modifier.size(14.dp),
-									tint = Colors.text.copy(alpha = 0.4f)
-								)
-								Spacer(Modifier.width(4.dp))
-								Text(
-									if (!entry!!.address.isNullOrBlank()) entry!!.address!! else "${entry!!.latitude}, ${entry!!.longitude}",
-									style = TextStyle(
-										fontSize = 12.sp,
-										color = Colors.text.copy(alpha = 0.4f)
-									),
-									maxLines = 1,
-									overflow = TextOverflow.Ellipsis,
-									textAlign = TextAlign.Center
-								)
-							}
-						}
-					}
-				}
-			}
+                Column(
+                    Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Card(-11f, onClick = { if (!isLoading) showPhotoViewer = true }) {
+                        if (isLoading) {
+                            Box(
+                                Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) { CircularProgressIndicator() }
+                        } else if (entry != null) {
+                            val hazeState = rememberHazeState()
 
-			// Top Bar
-			Row(
-				Modifier
-					.fillMaxWidth()
-					.statusBarsPadding()
-					.padding(16.dp),
-				verticalAlignment = Alignment.CenterVertically,
-				horizontalArrangement = Arrangement.SpaceBetween
-			) {
-				Surface(
-					onClick = { navigator.pop() },
-					shape = CircleShape,
-					color = Colors.background,
-					modifier = Modifier.size(40.dp)
-				) {
-					Box(contentAlignment = Alignment.Center) {
-						Icon(Tabler.Outline.ArrowLeft, contentDescription = "Back", modifier = Modifier.size(20.dp))
-					}
-				}
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                            ) {
+                                if (editedImagePaths.isEmpty()) {
+                                    Image(
+                                        Tabler.Outline.PhotoX,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .align(Alignment.Center)
+                                            .size(128.dp),
+                                        colorFilter = ColorFilter.tint(Colors.text.copy(alpha = 0.2f))
+                                    )
+                                } else {
+                                    AsyncImage(
+                                        model = editedImagePaths.first(),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .hazeSource(hazeState),
+                                        contentScale = ContentScale.Crop
+                                    )
 
-				Box(
-					modifier = Modifier
-						.weight(1f)
-						.padding(horizontal = 16.dp),
-					contentAlignment = Alignment.Center
-				) {
-					if (isEditingTitle) {
-						BasicTextField(
-							value = editedTitle,
-							onValueChange = { editedTitle = it },
-							textStyle = TextStyle(
-								fontSize = 18.sp,
-								fontWeight = FontWeight.Bold,
-								textAlign = TextAlign.Center,
-								color = Colors.text
-							),
-							modifier = Modifier
-								.focusRequester(titleFocusRequester)
-								.fillMaxWidth(),
-							keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-							keyboardActions = KeyboardActions(onDone = {
-								isEditingTitle = false
-								focusManager.clearFocus()
-							}),
-							singleLine = true
-						)
-						LaunchedEffect(Unit) {
-							titleFocusRequester.requestFocus()
-						}
-					} else {
-						Text(
-							editedTitle.ifBlank { if (entryId == null) "New Entry" else "No Title" },
-							style = TextStyle(
-								fontSize = 18.sp,
-								fontWeight = FontWeight.Bold,
-								color = if (editedTitle.isBlank()) Colors.text.copy(alpha = 0.5f) else Colors.text
-							),
-							modifier = Modifier.clickable { isEditingTitle = true },
-							maxLines = 1,
-							overflow = TextOverflow.Ellipsis
-						)
-					}
-				}
+                                    val blurStyle = CupertinoMaterials.ultraThin(Color(0x66272726))
+                                    val shape = CircleShape
 
-				if (entryId != null) {
-					Surface(
-						onClick = { showDeleteEntryConfirmation = true },
-						shape = CircleShape,
-						color = Colors.background,
-						modifier = Modifier.size(40.dp)
-					) {
-						Box(contentAlignment = Alignment.Center) {
-							Icon(
-								Tabler.Outline.Trash,
-								contentDescription = "Delete",
-								modifier = Modifier.size(20.dp)
-							)
-						}
-					}
-				} else {
-					Spacer(Modifier.size(40.dp))
-				}
-			}
+                                    Box(
+                                        Modifier
+                                            .padding(8.dp)
+                                            .align(Alignment.BottomStart)
+                                            .clip(shape)
+                                            .hazeEffect(hazeState) {
+                                                blurEffect {
+                                                    style = blurStyle
+                                                }
+                                            }
+                                            .padding(8.dp, 4.dp)
+                                    ) {
+                                        Text(
+                                            editedImagePaths.size.toString(),
+                                            color = Color(0xFFFFFFFF),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Card(9.54f, onClick = { if (!isLoading) showDetailsModal = true }) {
+                        if (isLoading) {
+                            Box(
+                                Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) { CircularProgressIndicator() }
+                        } else if (entry != null) {
+                            Column(
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        Tabler.Outline.Calendar,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp),
+                                        tint = Colors.text.copy(alpha = 0.5f)
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    val localDateTime = Instant.fromEpochMilliseconds(entry!!.date)
+                                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                                    val dateString =
+                                        "${localDateTime.dayOfMonth} ${
+                                            localDateTime.month.name.lowercase()
+                                                .replaceFirstChar { it.uppercase() }
+                                        } ${localDateTime.year}"
+                                    Text(
+                                        dateString,
+                                        style = TextStyle(
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            color = Colors.text.copy(alpha = 0.5f)
+                                        )
+                                    )
+                                }
+                                Spacer(Modifier.height(12.dp))
+                                Text(
+                                    editedDescription.ifBlank { "Add a description..." },
+                                    style = TextStyle(
+                                        fontSize = 16.sp,
+                                        color = if (editedDescription.isBlank()) Colors.text.copy(alpha = 0.5f) else Colors.text,
+                                        lineHeight = 22.sp
+                                    ),
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                ) {
+                                    Icon(
+                                        Tabler.Outline.MapPin,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                        tint = Colors.text.copy(alpha = 0.4f)
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        if (!entry!!.address.isNullOrBlank()) entry!!.address!! else "${entry!!.latitude}, ${entry!!.longitude}",
+                                        style = TextStyle(
+                                            fontSize = 12.sp,
+                                            color = Colors.text.copy(alpha = 0.4f)
+                                        ),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
 			// Bottom Save/Cancel buttons
 			val hasChanges = remember(editedTitle, editedDescription, editedImagePaths, entry) {
@@ -406,12 +408,15 @@ class JournalEntryScreen(
 						)
 			}
 
+            val isFormValid = editedTitle.isNotBlank() && (entry?.latitude ?: latitude) != null && (entry?.longitude
+                ?: longitude) != null
+
 			if (hasChanges || entryId == null) {
 				Row(
 					Modifier
-						.align(Alignment.BottomCenter)
-						.padding(bottom = 32.dp)
-						.navigationBarsPadding(),
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 32.dp)
+                        .navigationBarsPadding(),
 					horizontalArrangement = Arrangement.spacedBy(16.dp)
 				) {
 					Button(
@@ -434,6 +439,7 @@ class JournalEntryScreen(
 					}
 
 					Button(
+                        enabled = isFormValid,
 						onClick = {
 							scope.launch {
 								var synced = false
@@ -526,8 +532,8 @@ class JournalEntryScreen(
 				) {
 					Box(
 						Modifier
-							.fillMaxSize()
-							.background(Color.Black.copy(alpha = 0.9f))
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.9f))
 					) {
 						if (editedImagePaths.isEmpty()) {
 							Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -551,9 +557,9 @@ class JournalEntryScreen(
 									model = editedImagePaths[index],
 									contentDescription = null,
 									modifier = Modifier
-										.fillMaxSize()
-										.padding(16.dp)
-										.clip(RoundedCornerShape(16.dp)),
+                                        .fillMaxSize()
+                                        .padding(16.dp)
+                                        .clip(RoundedCornerShape(16.dp)),
 									contentScale = ContentScale.Fit
 								)
 							}
@@ -565,10 +571,10 @@ class JournalEntryScreen(
 							shape = CircleShape,
 							color = Color.White.copy(alpha = 0.2f),
 							modifier = Modifier
-								.padding(16.dp)
-								.statusBarsPadding()
-								.size(40.dp)
-								.align(Alignment.TopStart)
+                                .padding(16.dp)
+                                .statusBarsPadding()
+                                .size(40.dp)
+                                .align(Alignment.TopStart)
 						) {
 							Box(contentAlignment = Alignment.Center) {
 								Icon(
@@ -583,9 +589,9 @@ class JournalEntryScreen(
 						// Add/Delete buttons at the bottom
 						Row(
 							Modifier
-								.align(Alignment.BottomCenter)
-								.padding(32.dp)
-								.navigationBarsPadding(),
+                                .align(Alignment.BottomCenter)
+                                .padding(32.dp)
+                                .navigationBarsPadding(),
 							horizontalArrangement = Arrangement.spacedBy(16.dp)
 						) {
 							Button(
@@ -648,16 +654,16 @@ class JournalEntryScreen(
 				Dialog(onDismissRequest = { showDetailsModal = false }) {
 					Surface(
 						modifier = Modifier
-							.fillMaxWidth()
-							.padding(16.dp),
+                            .fillMaxWidth()
+                            .padding(16.dp),
 						shape = RoundedCornerShape(24.dp),
 						color = Colors.backgroundSecondary,
 						border = BorderStroke(2.dp, Colors.borderColor)
 					) {
 						Column(
 							Modifier
-								.padding(24.dp)
-								.fillMaxWidth(),
+                                .padding(24.dp)
+                                .fillMaxWidth(),
 							horizontalAlignment = Alignment.CenterHorizontally
 						) {
 							if (isEditingTitle) {
@@ -671,8 +677,8 @@ class JournalEntryScreen(
 										color = Colors.text
 									),
 									modifier = Modifier
-										.focusRequester(modalTitleFocusRequester)
-										.fillMaxWidth(),
+                                        .focusRequester(modalTitleFocusRequester)
+                                        .fillMaxWidth(),
 									keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
 									keyboardActions = KeyboardActions(onDone = {
 										isEditingTitle = false
@@ -706,8 +712,8 @@ class JournalEntryScreen(
 										textAlign = TextAlign.Center
 									),
 									modifier = Modifier
-										.focusRequester(descriptionFocusRequester)
-										.fillMaxWidth(),
+                                        .focusRequester(descriptionFocusRequester)
+                                        .fillMaxWidth(),
 									keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
 									keyboardActions = KeyboardActions(onDone = {
 										isEditingDescription = false
@@ -743,62 +749,62 @@ class JournalEntryScreen(
 					}
 				}
 			}
-		}
-	}
+        }
+    }
 
-	private fun triggerSync(context: android.content.Context) {
-		val constraints = Constraints.Builder()
-			.setRequiredNetworkType(NetworkType.CONNECTED)
-			.build()
+    private fun triggerSync(context: android.content.Context) {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
 
-		val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-			.setConstraints(constraints)
-			.build()
+        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+            .setConstraints(constraints)
+            .build()
 
-		WorkManager.getInstance(context).enqueueUniqueWork(
-			"LocationSync",
-			ExistingWorkPolicy.APPEND_OR_REPLACE,
-			syncRequest
-		)
-	}
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "LocationSync",
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            syncRequest
+        )
+    }
 
-	private fun saveImageToInternalStorage(context: android.content.Context, uri: android.net.Uri): String? {
-		return try {
-			val inputStream = context.contentResolver.openInputStream(uri) ?: return null
-			val fileName = "image_${System.currentTimeMillis()}.jpg"
-			val file = File(context.filesDir, fileName)
-			val outputStream = FileOutputStream(file)
-			inputStream.use { input ->
-				outputStream.use { output ->
-					input.copyTo(output)
-				}
-			}
-			file.absolutePath
-		} catch (e: Exception) {
-			e.printStackTrace()
-			null
-		}
-	}
+    private fun saveImageToInternalStorage(context: android.content.Context, uri: android.net.Uri): String? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+            val fileName = "image_${System.currentTimeMillis()}.jpg"
+            val file = File(context.filesDir, fileName)
+            val outputStream = FileOutputStream(file)
+            inputStream.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            file.absolutePath
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 
-	@Composable
-	private fun Card(rotation: Float, onClick: () -> Unit = {}, content: @Composable () -> Unit) {
-		Surface(
-			onClick = onClick,
-			modifier = Modifier
-				.size(240.dp)
-				.rotate(rotation),
-			shape = RoundedCornerShape(24.dp),
-			color = Colors.backgroundSecondary,
-			border = BorderStroke(4.dp, Colors.borderColor),
-			shadowElevation = 8.dp
-		) {
-			Box(
-				Modifier
-					.fillMaxSize()
-					.padding(4.dp)
-			) {
-				content()
-			}
-		}
-	}
+    @Composable
+    private fun Card(rotation: Float, onClick: () -> Unit = {}, content: @Composable () -> Unit) {
+        Surface(
+            onClick = onClick,
+            modifier = Modifier
+                .size(240.dp)
+                .rotate(rotation),
+            shape = RoundedCornerShape(24.dp),
+            color = Colors.backgroundSecondary,
+            border = BorderStroke(4.dp, Colors.borderColor),
+            shadowElevation = 8.dp
+        ) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(4.dp)
+            ) {
+                content()
+            }
+        }
+    }
 }

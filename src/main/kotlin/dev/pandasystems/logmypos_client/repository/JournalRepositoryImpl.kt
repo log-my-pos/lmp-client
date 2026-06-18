@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.Flow
 class JournalRepositoryImpl(private val journalEntryDao: JournalEntryDao) : JournalRepository {
     override val allEntries: Flow<List<JournalEntry>> = journalEntryDao.getAllEntries()
 
+    override val unsyncedEntries: Flow<List<JournalEntry>> = journalEntryDao.getUnsyncedEntriesFlow()
+
     override suspend fun getEntryById(id: Long): JournalEntry? {
         return journalEntryDao.getEntryById(id)
     }
