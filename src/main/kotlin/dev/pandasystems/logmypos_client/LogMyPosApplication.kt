@@ -20,6 +20,23 @@ class LogMyPosApplication : Application() {
         }
 
         setupPeriodicSync()
+        triggerInitialSync()
+    }
+
+    private fun triggerInitialSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniqueWork(
+            "InitialSync",
+            ExistingWorkPolicy.REPLACE,
+            syncRequest
+        )
     }
 
     private fun setupPeriodicSync() {

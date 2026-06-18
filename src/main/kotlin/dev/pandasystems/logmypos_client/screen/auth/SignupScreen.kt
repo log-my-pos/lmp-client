@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -27,6 +28,7 @@ import dev.pandasystems.logmypos_client.services.auth.AuthService
 import dev.pandasystems.logmypos_client.theme.Colors
 import dev.pandasystems.logmypos_client.theme.Colors.backgroundSecondary
 import dev.pandasystems.logmypos_client.utils.SetupPreviewScreen
+import dev.pandasystems.logmypos_client.utils.SyncUtils
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -40,6 +42,7 @@ class SignupScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val authService = koinInject<AuthService>()
         val scope = rememberCoroutineScope()
+        val context = LocalContext.current
 
         val usernameState = rememberTextFieldState()
         val emailState = rememberTextFieldState()
@@ -151,6 +154,7 @@ class SignupScreen : Screen {
                         val success = authService.signup(username, email, password)
                         isLoading = false
                         if (success) {
+                            SyncUtils.triggerSync(context)
                             navigator.replaceAll(MainScreen())
                         } else {
                             errorMessage = "Signup failed. Please try again."

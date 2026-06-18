@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.work.*
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -61,9 +60,8 @@ import dev.pandasystems.logmypos_client.services.auth.AuthService
 import dev.pandasystems.logmypos_client.services.location.LocationService
 import dev.pandasystems.logmypos_client.theme.Colors
 import dev.pandasystems.logmypos_client.utils.SetupPreviewScreen
-import dev.pandasystems.logmypos_client.worker.SyncWorker
+import dev.pandasystems.logmypos_client.utils.SyncUtils
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.koinInject
@@ -149,7 +147,8 @@ class JournalEntryScreen(
                     latitude = latitude,
                     longitude = longitude,
                     address = currentLocation?.address?.formattedAddress ?: currentLocation?.name,
-                    date = System.currentTimeMillis(),
+                    date = kotlinx.datetime.Instant.fromEpochMilliseconds(System.currentTimeMillis())
+                        .toLocalDateTime(TimeZone.currentSystemDefault()),
                     imagePaths = emptyList()
                 )
                 entry = newEntry
@@ -341,8 +340,7 @@ class JournalEntryScreen(
                                         tint = Colors.text.copy(alpha = 0.5f)
                                     )
                                     Spacer(Modifier.width(4.dp))
-                                    val localDateTime = Instant.fromEpochMilliseconds(entry!!.date)
-                                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                                    val localDateTime = entry!!.date
                                     val dateString =
                                         "${localDateTime.dayOfMonth} ${
                                             localDateTime.month.name.lowercase()
@@ -449,7 +447,9 @@ class JournalEntryScreen(
 											title = editedTitle,
 											description = editedDescription,
 											latitude = latitude ?: 0.0,
-											longitude = longitude ?: 0.0
+                                            longitude = longitude ?: 0.0,
+                                            creationDate = kotlinx.datetime.Instant.fromEpochMilliseconds(System.currentTimeMillis())
+                                                .toLocalDateTime(TimeZone.currentSystemDefault())
 										)
 									} else {
 										null
@@ -465,7 +465,9 @@ class JournalEntryScreen(
 									longitude = entry?.longitude ?: longitude ?: 0.0,
 									address = entry?.address ?: currentLocation?.address?.formattedAddress
 									?: currentLocation?.name,
-									date = entry?.date ?: System.currentTimeMillis(),
+                                    date = entry?.date
+                                        ?: kotlinx.datetime.Instant.fromEpochMilliseconds(System.currentTimeMillis())
+                                            .toLocalDateTime(TimeZone.currentSystemDefault()),
 									imagePaths = editedImagePaths,
 									isSynced = synced
 								)
@@ -477,7 +479,7 @@ class JournalEntryScreen(
 								}
 
 								if (isLoggedIn && !synced) {
-									triggerSync(context)
+                                    SyncUtils.triggerSync(context)
 								}
 
 								if (entryId == null) {
@@ -752,21 +754,6 @@ class JournalEntryScreen(
         }
     }
 
-    private fun triggerSync(context: android.content.Context) {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            "LocationSync",
-            ExistingWorkPolicy.APPEND_OR_REPLACE,
-            syncRequest
-        )
-    }
 
     private fun saveImageToInternalStorage(context: android.content.Context, uri: android.net.Uri): String? {
         return try {

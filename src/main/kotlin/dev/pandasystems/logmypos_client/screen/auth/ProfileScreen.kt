@@ -1,6 +1,5 @@
 package dev.pandasystems.logmypos_client.screen.auth
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,7 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.work.*
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -23,7 +21,7 @@ import dev.pandasystems.logmypos_client.repository.JournalRepository
 import dev.pandasystems.logmypos_client.services.auth.AuthService
 import dev.pandasystems.logmypos_client.theme.Colors
 import dev.pandasystems.logmypos_client.utils.SetupPreviewScreen
-import dev.pandasystems.logmypos_client.worker.SyncWorker
+import dev.pandasystems.logmypos_client.utils.SyncUtils
 import org.koin.compose.koinInject
 
 @Preview
@@ -91,7 +89,7 @@ class ProfileScreen : Screen {
                     if (unsyncedEntries.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Button(
-                            onClick = { triggerSync(context) },
+                            onClick = { SyncUtils.triggerSync(context) },
                             shape = RoundedCornerShape(8.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Colors.text,
@@ -138,19 +136,4 @@ class ProfileScreen : Screen {
         }
     }
 
-    private fun triggerSync(context: Context) {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
-        val syncRequest = OneTimeWorkRequestBuilder<SyncWorker>()
-            .setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            "LocationSync",
-            ExistingWorkPolicy.APPEND_OR_REPLACE,
-            syncRequest
-        )
-    }
 }

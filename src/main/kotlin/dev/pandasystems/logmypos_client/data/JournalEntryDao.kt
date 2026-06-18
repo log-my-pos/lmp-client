@@ -17,6 +17,9 @@ interface JournalEntryDao {
     @Query("SELECT * FROM journal_entries WHERE isSynced = 0")
     fun getUnsyncedEntriesFlow(): Flow<List<JournalEntry>>
 
+    @Query("SELECT * FROM journal_entries WHERE cloudId = :cloudId")
+    suspend fun getEntryByCloudId(cloudId: kotlin.uuid.Uuid): JournalEntry?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEntry(entry: JournalEntry): Long
 

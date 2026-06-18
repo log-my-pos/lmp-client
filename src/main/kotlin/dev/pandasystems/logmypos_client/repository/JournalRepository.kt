@@ -3,6 +3,8 @@ package dev.pandasystems.logmypos_client.repository
 import dev.pandasystems.logmypos_client.data.JournalEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 interface JournalRepository {
     val allEntries: Flow<List<JournalEntry>>
@@ -18,6 +20,7 @@ interface JournalRepository {
     suspend fun delete(entry: JournalEntry)
 
     suspend fun getUnsyncedEntries(): List<JournalEntry>
+    suspend fun getEntryByCloudId(cloudId: kotlin.uuid.Uuid): JournalEntry?
 }
 
 class FakeJournalRepositoryImpl : JournalRepository {
@@ -30,7 +33,8 @@ class FakeJournalRepositoryImpl : JournalRepository {
                 latitude = 0.0,
                 longitude = 0.0,
                 address = "",
-                date = 0L,
+                date = kotlinx.datetime.Instant.fromEpochMilliseconds(System.currentTimeMillis())
+                    .toLocalDateTime(TimeZone.currentSystemDefault()),
                 imagePaths = emptyList(),
                 isSynced = false
             )
@@ -47,7 +51,8 @@ class FakeJournalRepositoryImpl : JournalRepository {
             latitude = 0.0,
             longitude = 0.0,
             address = "",
-            date = 0L,
+            date = kotlinx.datetime.Instant.fromEpochMilliseconds(System.currentTimeMillis())
+                .toLocalDateTime(TimeZone.currentSystemDefault()),
             imagePaths = emptyList(),
             isSynced = false
         )
@@ -62,4 +67,5 @@ class FakeJournalRepositoryImpl : JournalRepository {
     override suspend fun delete(entry: JournalEntry) {}
 
     override suspend fun getUnsyncedEntries(): List<JournalEntry> = emptyList()
+    override suspend fun getEntryByCloudId(cloudId: kotlin.uuid.Uuid): JournalEntry? = null
 }

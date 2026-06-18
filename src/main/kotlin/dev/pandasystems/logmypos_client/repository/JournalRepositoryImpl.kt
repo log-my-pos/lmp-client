@@ -28,4 +28,8 @@ class JournalRepositoryImpl(private val journalEntryDao: JournalEntryDao) : Jour
     override suspend fun getUnsyncedEntries(): List<JournalEntry> {
         return journalEntryDao.getUnsyncedEntries()
     }
+
+    override suspend fun getEntryByCloudId(cloudId: kotlin.uuid.Uuid): JournalEntry? {
+        return journalEntryDao.getEntryByCloudId(cloudId)
+    }
 }
